@@ -42,8 +42,6 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--grey-1); font-family: var(--sans); font-weight: 400; line-height: 1.5; -webkit-font-smoothing: antialiased; }
-
-  /* TOPBAR */
   .topbar { background: var(--sir-blue); color: var(--white); padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; }
   .topbar .brand .dba { font-family: var(--serif); font-weight: 400; font-size: 18px; letter-spacing: 0.5px; }
   .topbar .brand .sub { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sir-gold-soft); font-weight: 500; }
@@ -51,20 +49,14 @@
   .topbar .pill { background: rgba(194, 155, 64, 0.18); color: var(--sir-gold-soft); padding: 6px 14px; border-radius: 100px; letter-spacing: 1.5px; }
   .topbar button.refresh { background: rgba(255,255,255,0.06); color: var(--sir-gold-soft); border: 1px solid rgba(255,255,255,0.16); padding: 7px 14px; border-radius: 100px; font-size: 11px; letter-spacing: 1.5px; cursor: pointer; font-family: var(--sans); text-transform: uppercase; font-weight: 600; }
   .topbar button.refresh:hover { background: rgba(255,255,255,0.12); }
-
-  /* HERO */
   .hero { background: var(--sir-blue); color: var(--white); padding: 8px 48px 48px; border-bottom: 1px solid rgba(255,255,255,0.08); }
   .hero h1 { font-family: var(--serif); font-weight: 400; font-size: 52px; line-height: 1.05; max-width: 920px; margin-bottom: 16px; letter-spacing: -0.5px; }
   .hero h1 em { color: var(--sir-gold-soft); font-style: italic; }
   .hero .lede { font-size: 14px; color: var(--grey-4); max-width: 720px; line-height: 1.7; }
-
-  /* TABS */
   .tabs { background: var(--white); border-bottom: 1px solid var(--grey-5); padding: 0 32px; display: flex; gap: 4px; overflow-x: auto; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
   .tab { padding: 18px 22px; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; color: var(--grey-3); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; }
   .tab:hover { color: var(--sir-blue); }
   .tab.active { color: var(--sir-blue); border-bottom-color: var(--sir-gold); }
-
-  /* MAIN */
   main { max-width: 1500px; margin: 0 auto; padding: 40px 32px; }
   .panel { display: none; }
   .panel.active { display: block; }
@@ -73,14 +65,10 @@
   .section-head h2 { font-family: var(--serif); font-weight: 500; font-size: 30px; color: var(--sir-blue); letter-spacing: -0.3px; }
   .section-head .eyebrow { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sir-gold); font-weight: 600; }
   .intro { font-size: 13px; color: var(--grey-2); max-width: 760px; margin-bottom: 24px; line-height: 1.7; }
-
-  /* LOADING / ERROR */
   .loading, .error-state { padding: 80px 40px; text-align: center; color: var(--grey-3); font-size: 14px; }
   .error-state { color: var(--red); background: var(--red-soft); border-radius: 6px; padding: 24px; margin: 24px 0; font-size: 13px; line-height: 1.7; text-align: left; }
   .error-state .title { font-weight: 700; margin-bottom: 8px; font-family: var(--serif); font-size: 18px; }
   .error-state code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 3px; font-size: 12px; }
-
-  /* KPI */
   .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
   .kpi { background: var(--white); border: 1px solid var(--grey-5); padding: 22px; border-radius: 4px; position: relative; }
   .kpi::before { content: ""; position: absolute; top: 0; left: 0; width: 32px; height: 3px; background: var(--sir-gold); }
@@ -92,8 +80,6 @@
   .kpi .delta.down { background: var(--red-soft); color: var(--red); }
   .kpi .delta.flat { background: var(--grey-5); color: var(--grey-2); }
   .kpi .context { font-size: 11px; color: var(--grey-3); margin-top: 8px; line-height: 1.5; }
-
-  /* BUDGET */
   .spend-card { background: var(--white); border: 1px solid var(--grey-5); padding: 28px; border-radius: 4px; }
   .spend-summary { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 24px; align-items: end; padding-bottom: 22px; border-bottom: 1px solid var(--grey-5); margin-bottom: 22px; }
   .spend-summary .label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; margin-bottom: 10px; }
@@ -113,8 +99,6 @@
   .status.on { color: var(--green); }
   .status.watch { color: var(--amber); }
   .status.over { color: var(--red); }
-
-  /* WORKSTREAMS */
   .workstream { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
   .workstream-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1.4fr; gap: 16px; padding: 16px 22px; border-bottom: 1px solid var(--grey-5); align-items: center; font-size: 13px; }
   .workstream-row.head { background: var(--sir-blue); color: var(--white); padding: 14px 22px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
@@ -126,11 +110,7 @@
   .badge.gold { background: var(--amber-soft); color: var(--amber); }
   .badge.blue { background: #d9e4f0; color: var(--sir-blue); }
   .badge.red { background: var(--red-soft); color: var(--red); }
-
-  /* TWO COLUMN */
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-  /* QA */
   .qa-card { background: var(--white); border: 1px solid var(--grey-5); padding: 26px; border-radius: 4px; }
   .qa-big { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
   .qa-big .num { font-family: var(--serif); font-size: 60px; color: var(--sir-blue); line-height: 1; letter-spacing: -2px; }
@@ -141,8 +121,6 @@
   .qa-bars .fill { height: 100%; background: var(--sir-blue); }
   .qa-bars .fill.gold { background: var(--sir-gold); }
   .qa-bars .pct { text-align: right; font-weight: 700; color: var(--sir-blue); font-size: 13px; }
-
-  /* SIGNIFICANT SALES */
   .sig-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
   .sig-card { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
   .sig-card .img { height: 130px; background: linear-gradient(135deg, var(--sir-blue), var(--sir-blue-2)); display: flex; align-items: center; justify-content: center; color: var(--sir-gold-soft); font-family: var(--serif); font-size: 14px; letter-spacing: 2px; }
@@ -150,8 +128,6 @@
   .sig-card .price { font-family: var(--serif); font-size: 22px; color: var(--sir-blue); margin-bottom: 4px; }
   .sig-card .addr { font-size: 12px; color: var(--grey-2); margin-bottom: 8px; line-height: 1.4; }
   .sig-card .agent { font-size: 11px; color: var(--sir-gold); letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
-
-  /* TOUCHPOINTS */
   .touch-list { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
   .touch-head, .touch-row { display: grid; grid-template-columns: 80px 1fr 140px 120px; gap: 16px; padding: 16px 22px; align-items: center; font-size: 13px; }
   .touch-head { background: var(--sir-blue); color: var(--sir-gold-soft); padding: 12px 22px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
@@ -159,14 +135,10 @@
   .touch-date { font-family: var(--serif); font-size: 16px; color: var(--sir-blue); font-weight: 500; }
   .touch-desc strong { color: var(--sir-blue); font-weight: 700; }
   .touch-action { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; }
-
-  /* CHARTS */
   .chart-card { background: var(--white); border: 1px solid var(--grey-5); padding: 26px; border-radius: 4px; }
   .chart-card h3 { font-family: var(--serif); font-size: 22px; color: var(--sir-blue); font-weight: 500; margin-bottom: 4px; }
   .chart-card .sub { font-size: 12px; color: var(--grey-3); margin-bottom: 18px; }
   .chart-box { height: 260px; }
-
-  /* GANTT */
   .gantt { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow-x: auto; }
   .gantt-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
   .gantt-table th, .gantt-table td { padding: 10px 8px; font-size: 12px; border-bottom: 1px solid var(--grey-5); border-right: 1px solid var(--grey-5); text-align: center; }
@@ -180,8 +152,6 @@
   .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; font-size: 12px; }
   .legend .item { display: flex; align-items: center; gap: 8px; }
   .legend .swatch { width: 16px; height: 16px; border-radius: 3px; }
-
-  /* MONTH CARDS */
   .month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .month-card { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
   .month-card .head { background: var(--sir-blue); color: var(--white); padding: 12px 16px; }
@@ -194,8 +164,6 @@
   .month-card .item .content { flex: 1; font-size: 12px; line-height: 1.45; }
   .month-card .item .title { color: var(--grey-1); font-weight: 600; margin-bottom: 2px; }
   .month-card .item .meta { color: var(--grey-3); font-size: 11px; }
-
-  /* CADENCE */
   .cadence-list { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
   .cadence-head, .cadence-row { display: grid; grid-template-columns: 110px 1fr 160px 180px; gap: 12px; padding: 14px 22px; align-items: center; }
   .cadence-head { background: var(--sir-blue); color: var(--white); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
@@ -207,8 +175,6 @@
   .freq-Quarterly { background: rgba(194,155,64,0.18); color: #8B6B30; }
   .freq-Annual { background: var(--grey-5); color: var(--grey-2); }
   .freq-Adhoc, .freq-Ad-hoc { background: #f0f0f0; color: var(--grey-2); }
-
-  /* VIDEO STRIPS */
   .strip-card { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; padding: 16px 22px; display: grid; grid-template-columns: 80px 1fr 200px 120px; gap: 16px; align-items: center; margin-bottom: 10px; border-left: 4px solid var(--sir-gold); }
   .strip-card.monthly { border-left-color: var(--sir-blue); }
   .strip-card.seasonal { border-left-color: var(--sir-gold); background: linear-gradient(90deg, rgba(194,155,64,0.06), var(--white) 30%); }
@@ -220,8 +186,6 @@
   .strip-card .badge.Locked { background: rgba(0,35,73,0.1); color: var(--sir-blue); }
   .strip-card .badge.Active { background: rgba(47,125,79,0.15); color: var(--green); }
   .strip-card .badge.Pending { background: var(--grey-5); color: var(--grey-3); }
-
-  /* QMR + SOCIAL grids */
   .qmr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .qmr-week { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; padding: 16px; }
   .qmr-week .num { background: var(--sir-blue); color: var(--white); padding: 4px 10px; border-radius: 3px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; display: inline-block; margin-bottom: 10px; }
@@ -232,15 +196,12 @@
   .social-day .day { font-family: var(--serif); font-size: 22px; color: var(--sir-blue); margin-bottom: 6px; }
   .social-day .format { font-weight: 700; color: var(--grey-1); font-size: 13px; margin-bottom: 10px; }
   .social-day .meta { font-size: 11px; color: var(--grey-3); line-height: 1.5; }
-
-  /* FOOTER */
   footer { background: var(--sir-blue); color: var(--grey-4); padding: 36px 48px; margin-top: 64px; }
   .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px; max-width: 1500px; margin: 0 auto; }
   footer h4 { font-family: var(--serif); color: var(--sir-gold-soft); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; margin-bottom: 12px; }
   footer p { font-size: 12px; line-height: 1.7; }
   footer a { color: var(--grey-4); }
   .disclaimer { max-width: 1500px; margin: 28px auto 0; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 10px; line-height: 1.7; color: rgba(255,255,255,0.4); }
-
   @media (max-width: 1100px) {
     .kpi-grid, .sig-grid, .social-grid { grid-template-columns: 1fr 1fr; }
     .qmr-grid { grid-template-columns: 1fr 1fr; }
@@ -258,13 +219,8 @@
 </head>
 <body>
 
-<!-- ============================================================
-     CONFIG — paste your Google Sheet ID here.
-     Sheet ID is the long string in the URL between /d/ and /edit
-     Example: https://docs.google.com/spreadsheets/d/1AbC_dEf-Gh.../edit
-                                                  ^^^^^^^^^^^^^
-============================================================ -->
 <script>
+// CONFIG — your Google Sheet ID goes inside the quotes below
 const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
 </script>
 
@@ -295,10 +251,7 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
 </div>
 
 <main>
-
-  <!-- ================= TAB: NOW ================= -->
   <div class="panel active" id="panel-now">
-
     <section>
       <div class="section-head">
         <h2>Headline Indicators</h2>
@@ -307,7 +260,6 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">Four scoreboards measure the year: agent buy-in, brand consistency, quality reliability, editorial reach. Vanity metrics do not appear here.</p>
       <div class="kpi-grid" id="kpi-grid"><div class="loading">Loading KPIs...</div></div>
     </section>
-
     <section>
       <div class="section-head">
         <h2>Active Workstreams</h2>
@@ -316,7 +268,6 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">Every active workstream, owner, next deliverable, and status. The single living view across all initiatives.</p>
       <div class="workstream" id="workstream-table"><div class="loading">Loading workstreams...</div></div>
     </section>
-
     <section>
       <div class="section-head">
         <h2>Upcoming Decisions &amp; Touchpoints</h2>
@@ -325,7 +276,6 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">Every decision required from Leslie or Will in the next 30 days, with owner and proposed action.</p>
       <div class="touch-list" id="touch-list"><div class="loading">Loading touchpoints...</div></div>
     </section>
-
     <section>
       <div class="section-head">
         <h2>Significant Sales &mdash; Quarterly Candidates</h2>
@@ -334,12 +284,9 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">Eight half-pages of the quarter&rsquo;s biggest and best closings. These are the candidate properties pulled from the Master Listing Sheet for Leslie and Will&rsquo;s selection.</p>
       <div class="sig-grid" id="sig-grid"><div class="loading">Loading significant sales...</div></div>
     </section>
-
   </div>
 
-  <!-- ================= TAB: PERFORMANCE ================= -->
   <div class="panel" id="panel-performance">
-
     <section>
       <div class="section-head">
         <h2>Budget &amp; Pacing</h2>
@@ -348,7 +295,6 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">Channel-by-channel spend against annual budget. Update YTD spend values in the Budget tab of the Sheet.</p>
       <div class="spend-card" id="spend-card"><div class="loading">Loading budget...</div></div>
     </section>
-
     <section>
       <div class="section-head">
         <h2>Quality Reliability</h2>
@@ -364,7 +310,6 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
         </div>
       </div>
     </section>
-
     <section>
       <div class="section-head">
         <h2>Editorial Reach</h2>
@@ -384,12 +329,9 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
         </div>
       </div>
     </section>
-
   </div>
 
-  <!-- ================= TAB: THE YEAR ================= -->
   <div class="panel" id="panel-year">
-
     <section>
       <div class="section-head">
         <h2>Year at a Glance</h2>
@@ -399,7 +341,6 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <div class="gantt" id="gantt-container"><div class="loading">Loading gantt...</div></div>
       <div class="legend" id="gantt-legend"></div>
     </section>
-
     <section>
       <div class="section-head">
         <h2>Key Months in Detail</h2>
@@ -408,12 +349,9 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">The months that carry the heaviest concentration of new activity, surfaced as cards for quick review.</p>
       <div class="month-grid" id="month-grid"><div class="loading">Loading monthly detail...</div></div>
     </section>
-
   </div>
 
-  <!-- ================= TAB: CADENCE ================= -->
   <div class="panel" id="panel-cadence">
-
     <section>
       <div class="section-head">
         <h2>Leslie Touchpoint Cadence</h2>
@@ -422,12 +360,9 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">Every interaction Leslie should expect from WDR, with cadence, format, and detail. The relationship rhythm.</p>
       <div class="cadence-list" id="cadence-list"><div class="loading">Loading cadence...</div></div>
     </section>
-
   </div>
 
-  <!-- ================= TAB: PRODUCTION ================= -->
   <div class="panel" id="panel-production">
-
     <section>
       <div class="section-head">
         <h2>Video Production Schedule</h2>
@@ -436,7 +371,6 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">Olivier-led 10-hour monthly production across seven active months, plus two full-crew seasonal shoots in July and December. Leslie is looped in on every shoot.</p>
       <div id="video-schedule"><div class="loading">Loading video schedule...</div></div>
     </section>
-
     <section>
       <div class="section-head">
         <h2>Quarterly Market Report &mdash; 12-Week Cycle</h2>
@@ -445,7 +379,6 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">Every Quarterly Market Report follows a 12-week cycle. Standard cycle, repeated quarterly.</p>
       <div class="qmr-grid" id="qmr-grid"><div class="loading">Loading QMR cycle...</div></div>
     </section>
-
     <section>
       <div class="section-head">
         <h2>Social Media Weekly Cadence</h2>
@@ -454,9 +387,7 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
       <p class="intro">The recurring formats that build recognition. Localized Marketing Insider, Listing of the Week, Agent in Focus, Open House Tour Series, Lifestyle moment.</p>
       <div class="social-grid" id="social-grid"><div class="loading">Loading social cadence...</div></div>
     </section>
-
   </div>
-
 </main>
 
 <footer>
@@ -480,12 +411,8 @@ const SHEET_ID = "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy";
 </footer>
 
 <script>
-// ============================================================
-// DATA LAYER — fetch from Google Sheets gviz endpoint as CSV
-// ============================================================
-
 const sheetUrl = (sheetName) =>
-  `https://docs.google.com/spreadsheets/d/${1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
 
 async function fetchSheet(name) {
   const res = await fetch(sheetUrl(name), { cache: "no-store" });
@@ -518,9 +445,6 @@ function showError(msg) {
   });
 }
 
-// ============================================================
-// TAB NAVIGATION
-// ============================================================
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -531,9 +455,6 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// ============================================================
-// RENDERERS
-// ============================================================
 function renderConfig(rows) {
   const cfg = {};
   rows.forEach(r => cfg[r.key] = r.value);
@@ -566,7 +487,6 @@ function renderBudget(rows, cfg) {
   const pct = Math.round((spent / total) * 100) || 0;
   const remaining = total - spent;
   const yoy = (cfg && cfg.yoy_variance) ? cfg.yoy_variance : "−$50K";
-
   const channelHtml = rows.map(r => {
     const cPct = Math.round((parseFloat(r.ytd_spend) / parseFloat(r.annual_budget)) * 100) || 0;
     const statusClass = (r.status || 'on').toLowerCase();
@@ -579,7 +499,6 @@ function renderBudget(rows, cfg) {
       <div class="status ${statusClass}">${statusLabel}</div>
     </div>`;
   }).join('');
-
   document.getElementById('spend-card').innerHTML = `
     <div class="spend-summary">
       <div>
@@ -724,7 +643,6 @@ function renderTouchpoints(rows) {
 function renderGantt(rows) {
   const months = ['may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar','apr'];
   const monthLabels = ['May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26','Jan 27','Feb 27','Mar 27','Apr 27'];
-
   const body = rows.map(r => {
     const cells = months.map(m => {
       const isActive = String(r[m] || '').trim() === '1';
@@ -735,13 +653,11 @@ function renderGantt(rows) {
     }).join('');
     return `<tr><td class="ws-name">${r.workstream || ''}</td>${cells}</tr>`;
   }).join('');
-
   document.getElementById('gantt-container').innerHTML = `
     <table class="gantt-table">
       <thead><tr><th class="ws-col">Workstream</th>${monthLabels.map(m => `<th>${m}</th>`).join('')}</tr></thead>
       <tbody>${body}</tbody>
     </table>`;
-
   const legendKeys = [
     ['newsprint', 'Newsprint'], ['newspaper_digital', 'Newspaper Digital'],
     ['targeted', 'Targeted Digital'], ['video', 'Video'], ['airport', 'Airport'],
@@ -821,11 +737,8 @@ function renderSocial(rows) {
     </div>`).join('');
 }
 
-// ============================================================
-// BOOT
-// ============================================================
 async function loadAll() {
-  if (!1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy || 1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy === "1GIo5Z3QSZeZ0zL14HHv38kJwZHYiQXKy") {
+  if (!SHEET_ID || SHEET_ID === "PASTE_YOUR_GOOGLE_SHEET_ID_HERE") {
     showError("The Google Sheet ID has not been configured. Open this HTML file in a text editor, find the line that says <code>const SHEET_ID = ...</code> near the top, and paste the ID from your Google Sheet URL.");
     return;
   }
@@ -841,7 +754,6 @@ async function loadAll() {
         fetchSheet("Leslie Cadence"), fetchSheet("Video Schedule"), fetchSheet("QMR Cycle"),
         fetchSheet("Social Cadence")
       ]);
-
     const cfg = renderConfig(config);
     renderKPIs(kpis);
     renderBudget(budget, cfg);
