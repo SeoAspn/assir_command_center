@@ -231,7 +231,7 @@
 <body>
 
 <script>
-// CONFIG — your Google Sheet ID goes inside the quotes below
+// CONFIG â€” your Google Sheet ID goes inside the quotes below
 const SHEET_ID = "1T_TRnSnFFFZvSjChCGaQC7N5-qvbvyb70XzYuLPJ3Ek";
 </script>
 
@@ -490,7 +490,7 @@ function renderBudget(rows, cfg) {
   const spent = rows.reduce((a, r) => a + (parseFloat(r.ytd_spend) || 0), 0);
   const pct = Math.round((spent / total) * 100) || 0;
   const remaining = total - spent;
-  const yoy = (cfg && cfg.yoy_variance) ? cfg.yoy_variance : "−$50K";
+  const yoy = (cfg && cfg.yoy_variance) ? cfg.yoy_variance : "âˆ’$50K";
   const channelHtml = rows.map(r => {
     const cPct = Math.round((parseFloat(r.ytd_spend) / parseFloat(r.annual_budget)) * 100) || 0;
     const statusClass = (r.status || 'on').toLowerCase();
@@ -637,7 +637,7 @@ function renderGantt(rows) {
       const isActive = String(r[m] || '').trim() === '1';
       const color = `var(--c-${r.color || 'newsprint'})`;
       return isActive
-        ? `<td class="cell active" style="background:${color};">■</td>`
+        ? `<td class="cell active" style="background:${color};">â– </td>`
         : `<td class="cell" style="background:#fafafa;"></td>`;
     }).join('');
     return `<tr><td class="ws-name">${r.workstream || ''}</td>${cells}</tr>`;
@@ -737,7 +737,7 @@ async function loadAll() {
            monthlyDetail, cadence, videoSchedule, qmrCycle, socialCadence] =
       await Promise.all([
         fetchSheet("Config"), fetchSheet("KPIs"), fetchSheet("Budget"),
-        fetchSheet("Workstreams"), fetchSheet("Error Summary"),
+        fetchSheet("Workstreams"), fetchSheet("Production Quality"),
         fetchSheet("Video Output"), fetchSheet("Agent Features"), fetchSheet("Significant Sales"),
         fetchSheet("Touchpoints"), fetchSheet("Year Gantt"), fetchSheet("Monthly Detail"),
         fetchSheet("Leslie Cadence"), fetchSheet("Video Schedule"), fetchSheet("QMR Cycle"),
