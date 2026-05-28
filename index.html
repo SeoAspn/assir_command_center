@@ -309,10 +309,10 @@ const SHEET_ID = "1T_TRnSnFFFZvSjChCGaQC7N5-qvbvyb70XzYuLPJ3Ek";
     <section>
       <div class="section-head">
         <h2>Quality Reliability</h2>
-        <span class="eyebrow" id="error-summary-eyebrow">Error Log Summary</span>
+        <span class="eyebrow" id="error-summary-eyebrow">Production &amp; Approvals</span>
       </div>
-      <p class="intro">A high-level read on errors caught by the QA system. Headline numbers only. Full detail lives in the QA tracker.</p>
-      <div class="error-tile" id="error-summary-tile"><div class="loading">Loading error summary...</div></div>
+      <p class="intro">A high-level read on what the team produced and how Sotheby&rsquo;s received it on first round. Headline numbers only.</p>
+      <div class="error-tile" id="error-summary-tile"><div class="loading">Loading production summary...</div></div>
     </section>
     <section>
       <div class="section-head">
@@ -547,19 +547,19 @@ function renderWorkstreams(rows) {
 function renderErrorSummary(rows) {
   const data = {};
   rows.forEach(r => { data[r.key] = r.value; });
-  const caught = data.total_caught || data.errors_caught || 'â€”';
-  const pct = data.caught_before_delivery_pct || data.before_delivery_pct || 'â€”';
+  const crafted = data.content_crafted || data.pieces_crafted || 'â€”';
+  const approved = data.first_round_approvals || data.approvals || 'â€”';
   const period = data.period_label || '';
   const note = data.trend_note || '';
-  if (period) document.getElementById('error-summary-eyebrow').textContent = 'Error Log Summary Â· ' + period;
+  if (period) document.getElementById('error-summary-eyebrow').textContent = 'Production & Approvals Â· ' + period;
   document.getElementById('error-summary-tile').innerHTML = `
     <div class="stat">
-      <div class="label">Errors Caught This Period</div>
-      <div class="value">${caught}</div>
+      <div class="label">Content Pieces Crafted</div>
+      <div class="value">${crafted}</div>
     </div>
     <div class="stat split">
-      <div class="label">Caught Before Delivery</div>
-      <div class="value">${pct}<span class="unit">%</span></div>
+      <div class="label">First-Round Sotheby&rsquo;s Approvals</div>
+      <div class="value">${approved}</div>
     </div>
     <div class="trend">
       <div class="label">Trend</div>
