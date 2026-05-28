@@ -112,6 +112,17 @@
   .badge.red { background: var(--red-soft); color: var(--red); }
   .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .qa-card { background: var(--white); border: 1px solid var(--grey-5); padding: 26px; border-radius: 4px; }
+  .error-tile { background: var(--white); border: 1px solid var(--grey-5); padding: 32px 36px; border-radius: 4px; display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 32px; align-items: center; position: relative; }
+  .error-tile::before { content: ""; position: absolute; top: 0; left: 0; width: 60px; height: 3px; background: var(--sir-gold); }
+  .error-tile .stat { display: flex; flex-direction: column; gap: 6px; }
+  .error-tile .stat .label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; }
+  .error-tile .stat .value { font-family: var(--serif); font-size: 52px; color: var(--sir-blue); line-height: 1; letter-spacing: -1.5px; font-weight: 400; }
+  .error-tile .stat .value .unit { font-size: 22px; color: var(--grey-3); margin-left: 6px; }
+  .error-tile .stat.split { border-left: 1px solid var(--grey-5); padding-left: 28px; }
+  .error-tile .trend { padding-left: 28px; border-left: 1px solid var(--grey-5); }
+  .error-tile .trend .label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; margin-bottom: 10px; }
+  .error-tile .trend .note { font-family: var(--serif); font-size: 18px; color: var(--sir-blue); line-height: 1.4; font-style: italic; }
+  @media (max-width: 1100px) { .error-tile { grid-template-columns: 1fr; gap: 20px; } .error-tile .stat.split, .error-tile .trend { border-left: none; padding-left: 0; border-top: 1px solid var(--grey-5); padding-top: 20px; } }
   .qa-big { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
   .qa-big .num { font-family: var(--serif); font-size: 60px; color: var(--sir-blue); line-height: 1; letter-spacing: -2px; }
   .qa-big .pct { font-size: 17px; color: var(--grey-3); }
@@ -220,7 +231,7 @@
 <body>
 
 <script>
-// CONFIG — your Google Sheet ID goes inside the quotes below
+// CONFIG â€” your Google Sheet ID goes inside the quotes below
 const SHEET_ID = "1T_TRnSnFFFZvSjChCGaQC7N5-qvbvyb70XzYuLPJ3Ek";
 </script>
 
@@ -298,17 +309,10 @@ const SHEET_ID = "1T_TRnSnFFFZvSjChCGaQC7N5-qvbvyb70XzYuLPJ3Ek";
     <section>
       <div class="section-head">
         <h2>Quality Reliability</h2>
-        <span class="eyebrow">QA Framework Performance</span>
+        <span class="eyebrow" id="error-summary-eyebrow">Error Log Summary</span>
       </div>
-      <p class="intro">First-pass approval rate by QA layer. Target: 96% by end of Q3.</p>
-      <div class="two-col">
-        <div class="qa-card" id="qa-card"><div class="loading">Loading QA...</div></div>
-        <div class="chart-card">
-          <h3>First-Pass Approval Trend</h3>
-          <div class="sub">Quarter over quarter, all channels combined</div>
-          <div class="chart-box"><canvas id="approvalChart"></canvas></div>
-        </div>
-      </div>
+      <p class="intro">A high-level read on errors caught by the QA system. Headline numbers only. Full detail lives in the QA tracker.</p>
+      <div class="error-tile" id="error-summary-tile"><div class="loading">Loading error summary...</div></div>
     </section>
     <section>
       <div class="section-head">
@@ -424,7 +428,7 @@ async function fetchSheet(name) {
 
 function fmtMoney(n) {
   const num = parseFloat(n);
-  if (isNaN(num)) return "—";
+  if (isNaN(num)) return "â€”";
   if (num >= 1000000) return "$" + (num / 1000000).toFixed(1) + "M";
   if (num >= 1000) return "$" + Math.round(num / 1000) + "K";
   return "$" + num.toLocaleString();
@@ -460,12 +464,12 @@ function renderConfig(rows) {
   rows.forEach(r => cfg[r.key] = r.value);
   document.getElementById('hero-headline').innerHTML = (cfg.hero_headline || '').replace(/elevation/g, '<em>elevation</em>');
   document.getElementById('hero-lede').textContent = cfg.hero_lede || '';
-  document.getElementById('period-label').textContent = 'Period · ' + (cfg.period_label || '—');
-  document.getElementById('last-updated').textContent = 'Updated ' + (cfg.last_updated || '—');
+  document.getElementById('period-label').textContent = 'Period Â· ' + (cfg.period_label || 'â€”');
+  document.getElementById('last-updated').textContent = 'Updated ' + (cfg.last_updated || 'â€”');
   document.getElementById('dashboard-sub').textContent = cfg.dashboard_title || 'Command Center';
   if (cfg.annual_budget) {
     document.getElementById('budget-eyebrow').textContent =
-      fmtMoney(cfg.annual_budget) + ' Annual · FY ' + (cfg.fiscal_year || '2026');
+      fmtMoney(cfg.annual_budget) + ' Annual Â· FY ' + (cfg.fiscal_year || '2026');
   }
   return cfg;
 }
@@ -474,8 +478,8 @@ function renderKPIs(rows) {
   const html = rows.map(r => `
     <div class="kpi">
       <div class="label">${r.label || ''}</div>
-      <div class="value">${r.value || '—'}${r.unit ? `<span class="unit">${r.unit}</span>` : ''}</div>
-      <div class="delta ${r.delta_direction || 'flat'}">${r.delta_direction === 'up' ? '▲' : r.delta_direction === 'down' ? '▼' : '•'} ${r.delta || ''}</div>
+      <div class="value">${r.value || 'â€”'}${r.unit ? `<span class="unit">${r.unit}</span>` : ''}</div>
+      <div class="delta ${r.delta_direction || 'flat'}">${r.delta_direction === 'up' ? 'â–²' : r.delta_direction === 'down' ? 'â–¼' : 'â€¢'} ${r.delta || ''}</div>
       <div class="context">${r.context || ''}</div>
     </div>`).join('');
   document.getElementById('kpi-grid').innerHTML = html;
@@ -486,7 +490,7 @@ function renderBudget(rows, cfg) {
   const spent = rows.reduce((a, r) => a + (parseFloat(r.ytd_spend) || 0), 0);
   const pct = Math.round((spent / total) * 100) || 0;
   const remaining = total - spent;
-  const yoy = (cfg && cfg.yoy_variance) ? cfg.yoy_variance : "−$50K";
+  const yoy = (cfg && cfg.yoy_variance) ? cfg.yoy_variance : "âˆ’$50K";
   const channelHtml = rows.map(r => {
     const cPct = Math.round((parseFloat(r.ytd_spend) / parseFloat(r.annual_budget)) * 100) || 0;
     const statusClass = (r.status || 'on').toLowerCase();
@@ -504,7 +508,7 @@ function renderBudget(rows, cfg) {
       <div>
         <div class="label">Year to Date Spend</div>
         <div class="progress"><div class="progress-bar" style="width: ${pct}%"></div></div>
-        <div class="progress-pacing">${pct}% Consumed · ${100-pct}% Remaining</div>
+        <div class="progress-pacing">${pct}% Consumed Â· ${100-pct}% Remaining</div>
       </div>
       <div>
         <div class="label">YTD Spend</div>
@@ -540,42 +544,27 @@ function renderWorkstreams(rows) {
   document.getElementById('workstream-table').innerHTML = html;
 }
 
-function renderQA(layers, trend) {
-  if (layers && layers.length) {
-    const avg = Math.round(layers.reduce((a, r) => a + (parseFloat(r.percent) || 0), 0) / layers.length);
-    const bars = layers.map(r => `
-      <div class="row">
-        <div class="label">${r.label || r.layer || ''}</div>
-        <div class="track"><div class="fill ${r.accent === 'gold' ? 'gold' : ''}" style="width: ${r.percent}%"></div></div>
-        <div class="pct">${r.percent}%</div>
-      </div>`).join('');
-    document.getElementById('qa-card').innerHTML = `
-      <div class="qa-big">
-        <div class="num">${avg}</div>
-        <div class="pct">% first-pass approvals YTD (avg)</div>
-      </div>
-      <div class="qa-bars">${bars}</div>`;
-  }
-  if (trend && trend.length) {
-    new Chart(document.getElementById('approvalChart'), {
-      type: 'line',
-      data: {
-        labels: trend.map(r => r.period),
-        datasets: [
-          { label: 'First-pass approval rate', data: trend.map(r => parseFloat(r.actual)),
-            borderColor: '#002349', backgroundColor: 'rgba(0,35,73,0.08)', borderWidth: 3,
-            pointBackgroundColor: '#C29B40', pointBorderColor: '#002349', pointBorderWidth: 2,
-            pointRadius: 6, tension: 0.35, fill: true },
-          { label: 'Target', data: trend.map(r => parseFloat(r.target)),
-            borderColor: '#C29B40', borderDash: [4, 4], borderWidth: 2, pointRadius: 0, fill: false }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false,
-        scales: { y: { min: 70, max: 100, ticks: { callback: v => v + '%' }, grid: { color: '#e9ebef' } }, x: { grid: { display: false } } },
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } }
-      }
-    });
-  }
+function renderErrorSummary(rows) {
+  const data = {};
+  rows.forEach(r => { data[r.key] = r.value; });
+  const caught = data.total_caught || data.errors_caught || 'â€”';
+  const pct = data.caught_before_delivery_pct || data.before_delivery_pct || 'â€”';
+  const period = data.period_label || '';
+  const note = data.trend_note || '';
+  if (period) document.getElementById('error-summary-eyebrow').textContent = 'Error Log Summary Â· ' + period;
+  document.getElementById('error-summary-tile').innerHTML = `
+    <div class="stat">
+      <div class="label">Errors Caught This Period</div>
+      <div class="value">${caught}</div>
+    </div>
+    <div class="stat split">
+      <div class="label">Caught Before Delivery</div>
+      <div class="value">${pct}<span class="unit">%</span></div>
+    </div>
+    <div class="trend">
+      <div class="label">Trend</div>
+      <div class="note">${note || 'No trend note provided.'}</div>
+    </div>`;
 }
 
 function renderVideoChart(rows) {
@@ -648,7 +637,7 @@ function renderGantt(rows) {
       const isActive = String(r[m] || '').trim() === '1';
       const color = `var(--c-${r.color || 'newsprint'})`;
       return isActive
-        ? `<td class="cell active" style="background:${color};">■</td>`
+        ? `<td class="cell active" style="background:${color};">â– </td>`
         : `<td class="cell" style="background:#fafafa;"></td>`;
     }).join('');
     return `<tr><td class="ws-name">${r.workstream || ''}</td>${cells}</tr>`;
@@ -743,12 +732,12 @@ async function loadAll() {
     return;
   }
   try {
-    const [config, kpis, budget, workstreams, qaLayers, approvalTrend,
+    const [config, kpis, budget, workstreams, errorSummary,
            videoOutput, agentFeatures, sigSales, touchpoints, gantt,
            monthlyDetail, cadence, videoSchedule, qmrCycle, socialCadence] =
       await Promise.all([
         fetchSheet("Config"), fetchSheet("KPIs"), fetchSheet("Budget"),
-        fetchSheet("Workstreams"), fetchSheet("QA Layers"), fetchSheet("Approval Trend"),
+        fetchSheet("Workstreams"), fetchSheet("Error Summary"),
         fetchSheet("Video Output"), fetchSheet("Agent Features"), fetchSheet("Significant Sales"),
         fetchSheet("Touchpoints"), fetchSheet("Year Gantt"), fetchSheet("Monthly Detail"),
         fetchSheet("Leslie Cadence"), fetchSheet("Video Schedule"), fetchSheet("QMR Cycle"),
@@ -758,7 +747,7 @@ async function loadAll() {
     renderKPIs(kpis);
     renderBudget(budget, cfg);
     renderWorkstreams(workstreams);
-    renderQA(qaLayers, approvalTrend);
+    renderErrorSummary(errorSummary);
     renderVideoChart(videoOutput);
     renderAgentChart(agentFeatures);
     renderSigSales(sigSales);
