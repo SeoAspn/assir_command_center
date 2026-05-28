@@ -548,7 +548,7 @@ function renderErrorSummary(rows) {
   const data = {};
   rows.forEach(r => { data[r.key] = r.value; });
   const crafted = data.content_crafted || data.pieces_crafted || '\u2014';
-  const approved = data.first_round_approvals || data.approvals || '\u2014';
+  const approved = data.version_average || data.first_round_approvals || data.approvals || '\u2014';
   const period = data.period_label || '';
   const note = data.trend_note || '';
   if (period) document.getElementById('error-summary-eyebrow').textContent = 'Production & Approvals \u00B7 ' + period;
@@ -558,7 +558,7 @@ function renderErrorSummary(rows) {
       <div class="value">${crafted}</div>
     </div>
     <div class="stat split">
-      <div class="label">First-Round Sotheby&rsquo;s Approvals</div>
+      <div class="label">Version Average</div>
       <div class="value">${approved}</div>
     </div>
     <div class="trend">
