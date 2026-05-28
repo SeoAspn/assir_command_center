@@ -412,7 +412,7 @@ const SHEET_ID = "1T_TRnSnFFFZvSjChCGaQC7N5-qvbvyb70XzYuLPJ3Ek";
 
 <script>
 const sheetUrl = (sheetName) =>
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&headers=1`;
 
 async function fetchSheet(name) {
   const res = await fetch(sheetUrl(name), { cache: "no-store" });
