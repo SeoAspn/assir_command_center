@@ -637,7 +637,7 @@ function renderGantt(rows) {
       const isActive = String(r[m] || '').trim() === '1';
       const color = `var(--c-${r.color || 'newsprint'})`;
       return isActive
-        ? `<td class="cell active" style="background:${color};">â– </td>`
+        ? `<td class="cell active" style="background:${color};">â– </td>`
         : `<td class="cell" style="background:#fafafa;"></td>`;
     }).join('');
     return `<tr><td class="ws-name">${r.workstream || ''}</td>${cells}</tr>`;
