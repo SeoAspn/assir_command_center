@@ -1,775 +1,418 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ASSIR Command Center</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aspen Snowmass Sotheby's International Realty — Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --sir-blue: #002349;
-    --sir-blue-2: #003c75;
-    --sir-gold: #C29B40;
-    --sir-gold-soft: #d9bf7a;
-    --grey-1: #1a1b20;
-    --grey-2: #4a4d54;
-    --grey-3: #7a7d84;
-    --grey-4: #c5c8cf;
-    --grey-5: #e9ebef;
-    --bg: #f7f5f0;
-    --white: #ffffff;
-    --green: #2f7d4f;
-    --green-soft: #e0eee5;
-    --red: #a93226;
-    --red-soft: #f5e3e0;
-    --amber: #b8862b;
-    --amber-soft: #f6ecd5;
-    --serif: 'Cormorant Garamond', Georgia, serif;
-    --sans: 'Noto Sans', -apple-system, sans-serif;
-    --c-newsprint: #002349;
-    --c-newspaper_digital: #1C3177;
-    --c-targeted: #5070A0;
-    --c-video: #C29B40;
-    --c-airport: #8B6B30;
-    --c-magazine: #445566;
-    --c-qmr: #2F7D4F;
-    --c-social: #d9bf7a;
-    --c-fifty: #A93226;
-    --c-leslie: #172856;
-    --c-internal: #7a7d84;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--grey-1); font-family: var(--sans); font-weight: 400; line-height: 1.5; -webkit-font-smoothing: antialiased; }
-  .topbar { background: var(--sir-blue); color: var(--white); padding: 18px 48px; display: flex; align-items: center; justify-content: space-between; }
-  .topbar .brand .dba { font-family: var(--serif); font-weight: 400; font-size: 18px; letter-spacing: 0.5px; }
-  .topbar .brand .sub { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sir-gold-soft); font-weight: 500; }
-  .topbar .meta { font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: var(--grey-4); display: flex; gap: 28px; align-items: center; }
-  .topbar .pill { background: rgba(194, 155, 64, 0.18); color: var(--sir-gold-soft); padding: 6px 14px; border-radius: 100px; letter-spacing: 1.5px; }
-  .topbar button.refresh { background: rgba(255,255,255,0.06); color: var(--sir-gold-soft); border: 1px solid rgba(255,255,255,0.16); padding: 7px 14px; border-radius: 100px; font-size: 11px; letter-spacing: 1.5px; cursor: pointer; font-family: var(--sans); text-transform: uppercase; font-weight: 600; }
-  .topbar button.refresh:hover { background: rgba(255,255,255,0.12); }
-  .hero { background: var(--sir-blue); color: var(--white); padding: 8px 48px 48px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-  .hero h1 { font-family: var(--serif); font-weight: 400; font-size: 52px; line-height: 1.05; max-width: 920px; margin-bottom: 16px; letter-spacing: -0.5px; }
-  .hero h1 em { color: var(--sir-gold-soft); font-style: italic; }
-  .hero .lede { font-size: 14px; color: var(--grey-4); max-width: 720px; line-height: 1.7; }
-  .tabs { background: var(--white); border-bottom: 1px solid var(--grey-5); padding: 0 32px; display: flex; gap: 4px; overflow-x: auto; position: sticky; top: 0; z-index: 50; box-shadow: 0 1px 0 rgba(0,0,0,0.02); }
-  .tab { padding: 18px 22px; font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; color: var(--grey-3); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap; }
-  .tab:hover { color: var(--sir-blue); }
-  .tab.active { color: var(--sir-blue); border-bottom-color: var(--sir-gold); }
-  main { max-width: 1500px; margin: 0 auto; padding: 40px 32px; }
-  .panel { display: none; }
-  .panel.active { display: block; }
-  section { margin-bottom: 56px; }
-  .section-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--grey-4); flex-wrap: wrap; gap: 12px; }
-  .section-head h2 { font-family: var(--serif); font-weight: 500; font-size: 30px; color: var(--sir-blue); letter-spacing: -0.3px; }
-  .section-head .eyebrow { font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--sir-gold); font-weight: 600; }
-  .intro { font-size: 13px; color: var(--grey-2); max-width: 760px; margin-bottom: 24px; line-height: 1.7; }
-  .loading, .error-state { padding: 80px 40px; text-align: center; color: var(--grey-3); font-size: 14px; }
-  .error-state { color: var(--red); background: var(--red-soft); border-radius: 6px; padding: 24px; margin: 24px 0; font-size: 13px; line-height: 1.7; text-align: left; }
-  .error-state .title { font-weight: 700; margin-bottom: 8px; font-family: var(--serif); font-size: 18px; }
-  .error-state code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 3px; font-size: 12px; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
-  .kpi { background: var(--white); border: 1px solid var(--grey-5); padding: 22px; border-radius: 4px; position: relative; }
-  .kpi::before { content: ""; position: absolute; top: 0; left: 0; width: 32px; height: 3px; background: var(--sir-gold); }
-  .kpi .label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; margin-bottom: 12px; }
-  .kpi .value { font-family: var(--serif); font-size: 42px; font-weight: 400; color: var(--sir-blue); line-height: 1; letter-spacing: -1px; }
-  .kpi .value .unit { font-size: 18px; color: var(--grey-3); margin-left: 4px; }
-  .kpi .delta { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 100px; }
-  .kpi .delta.up { background: var(--green-soft); color: var(--green); }
-  .kpi .delta.down { background: var(--red-soft); color: var(--red); }
-  .kpi .delta.flat { background: var(--grey-5); color: var(--grey-2); }
-  .kpi .context { font-size: 11px; color: var(--grey-3); margin-top: 8px; line-height: 1.5; }
-  .spend-card { background: var(--white); border: 1px solid var(--grey-5); padding: 28px; border-radius: 4px; }
-  .spend-summary { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 24px; align-items: end; padding-bottom: 22px; border-bottom: 1px solid var(--grey-5); margin-bottom: 22px; }
-  .spend-summary .label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; margin-bottom: 10px; }
-  .spend-summary .big { font-family: var(--serif); font-size: 36px; color: var(--sir-blue); line-height: 1; letter-spacing: -0.5px; }
-  .spend-summary .med { font-family: var(--serif); font-size: 24px; color: var(--grey-2); line-height: 1; }
-  .progress { height: 10px; background: var(--grey-5); border-radius: 100px; overflow: hidden; margin-bottom: 14px; }
-  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--sir-blue), var(--sir-blue-2)); border-radius: 100px; }
-  .progress-pacing { font-size: 11px; color: var(--grey-3); letter-spacing: 1.5px; text-transform: uppercase; }
-  .channel-head, .channel-row { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.5fr 1fr; gap: 16px; padding: 12px 0; align-items: center; font-size: 13px; }
-  .channel-head { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; border-bottom: 2px solid var(--sir-blue); }
-  .channel-row { border-bottom: 1px solid var(--grey-5); }
-  .channel-row .name { font-weight: 600; color: var(--sir-blue); }
-  .channel-row .bar { background: var(--grey-5); height: 6px; border-radius: 100px; overflow: hidden; }
-  .channel-row .bar-fill { height: 100%; background: var(--sir-blue); }
-  .channel-row .bar-fill.gold { background: var(--sir-gold); }
-  .channel-row .status { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; text-align: right; }
-  .status.on { color: var(--green); }
-  .status.watch { color: var(--amber); }
-  .status.over { color: var(--red); }
-  .workstream { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
-  .workstream-row { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1.4fr; gap: 16px; padding: 16px 22px; border-bottom: 1px solid var(--grey-5); align-items: center; font-size: 13px; }
-  .workstream-row.head { background: var(--sir-blue); color: var(--white); padding: 14px 22px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
-  .workstream-row .title { font-family: var(--serif); font-size: 17px; font-weight: 500; color: var(--sir-blue); }
-  .workstream-row .next { color: var(--grey-2); font-size: 12px; line-height: 1.5; }
-  .workstream-row .owner { font-size: 12px; color: var(--grey-2); font-weight: 500; }
-  .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
-  .badge.green { background: var(--green-soft); color: var(--green); }
-  .badge.gold { background: var(--amber-soft); color: var(--amber); }
-  .badge.blue { background: #d9e4f0; color: var(--sir-blue); }
-  .badge.red { background: var(--red-soft); color: var(--red); }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .qa-card { background: var(--white); border: 1px solid var(--grey-5); padding: 26px; border-radius: 4px; }
-  .error-tile { background: var(--white); border: 1px solid var(--grey-5); padding: 32px 36px; border-radius: 4px; display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 32px; align-items: center; position: relative; }
-  .error-tile::before { content: ""; position: absolute; top: 0; left: 0; width: 60px; height: 3px; background: var(--sir-gold); }
-  .error-tile .stat { display: flex; flex-direction: column; gap: 6px; }
-  .error-tile .stat .label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; }
-  .error-tile .stat .value { font-family: var(--serif); font-size: 52px; color: var(--sir-blue); line-height: 1; letter-spacing: -1.5px; font-weight: 400; }
-  .error-tile .stat .value .unit { font-size: 22px; color: var(--grey-3); margin-left: 6px; }
-  .error-tile .stat.split { border-left: 1px solid var(--grey-5); padding-left: 28px; }
-  .error-tile .trend { padding-left: 28px; border-left: 1px solid var(--grey-5); }
-  .error-tile .trend .label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; margin-bottom: 10px; }
-  .error-tile .trend .note { font-family: var(--serif); font-size: 18px; color: var(--sir-blue); line-height: 1.4; font-style: italic; }
-  @media (max-width: 1100px) { .error-tile { grid-template-columns: 1fr; gap: 20px; } .error-tile .stat.split, .error-tile .trend { border-left: none; padding-left: 0; border-top: 1px solid var(--grey-5); padding-top: 20px; } }
-  .qa-big { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
-  .qa-big .num { font-family: var(--serif); font-size: 60px; color: var(--sir-blue); line-height: 1; letter-spacing: -2px; }
-  .qa-big .pct { font-size: 17px; color: var(--grey-3); }
-  .qa-bars .row { display: grid; grid-template-columns: 110px 1fr 40px; gap: 12px; align-items: center; font-size: 12px; padding: 6px 0; }
-  .qa-bars .label { color: var(--grey-2); font-weight: 500; }
-  .qa-bars .track { height: 8px; background: var(--grey-5); border-radius: 100px; overflow: hidden; }
-  .qa-bars .fill { height: 100%; background: var(--sir-blue); }
-  .qa-bars .fill.gold { background: var(--sir-gold); }
-  .qa-bars .pct { text-align: right; font-weight: 700; color: var(--sir-blue); font-size: 13px; }
-  .sig-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-  .sig-card { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
-  .sig-card .img { height: 130px; background: linear-gradient(135deg, var(--sir-blue), var(--sir-blue-2)); display: flex; align-items: center; justify-content: center; color: var(--sir-gold-soft); font-family: var(--serif); font-size: 14px; letter-spacing: 2px; }
-  .sig-card .meta { padding: 16px; }
-  .sig-card .price { font-family: var(--serif); font-size: 22px; color: var(--sir-blue); margin-bottom: 4px; }
-  .sig-card .addr { font-size: 12px; color: var(--grey-2); margin-bottom: 8px; line-height: 1.4; }
-  .sig-card .agent { font-size: 11px; color: var(--sir-gold); letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
-  .touch-list { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
-  .touch-head, .touch-row { display: grid; grid-template-columns: 80px 1fr 140px 120px; gap: 16px; padding: 16px 22px; align-items: center; font-size: 13px; }
-  .touch-head { background: var(--sir-blue); color: var(--sir-gold-soft); padding: 12px 22px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; }
-  .touch-row { border-bottom: 1px solid var(--grey-5); }
-  .touch-date { font-family: var(--serif); font-size: 16px; color: var(--sir-blue); font-weight: 500; }
-  .touch-desc strong { color: var(--sir-blue); font-weight: 700; }
-  .touch-action { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--grey-3); font-weight: 600; }
-  .chart-card { background: var(--white); border: 1px solid var(--grey-5); padding: 26px; border-radius: 4px; }
-  .chart-card h3 { font-family: var(--serif); font-size: 22px; color: var(--sir-blue); font-weight: 500; margin-bottom: 4px; }
-  .chart-card .sub { font-size: 12px; color: var(--grey-3); margin-bottom: 18px; }
-  .chart-box { height: 260px; }
-  .gantt { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow-x: auto; }
-  .gantt-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
-  .gantt-table th, .gantt-table td { padding: 10px 8px; font-size: 12px; border-bottom: 1px solid var(--grey-5); border-right: 1px solid var(--grey-5); text-align: center; }
-  .gantt-table th { background: var(--sir-blue); color: var(--white); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 10px; }
-  .gantt-table th.ws-col, .gantt-table td.ws-name { text-align: left; padding-left: 16px; }
-  .gantt-table th.ws-col { width: 280px; }
-  .gantt-table td.ws-name { font-weight: 600; color: var(--sir-blue); font-size: 12px; }
-  .gantt-table td.cell { width: 70px; height: 38px; }
-  .gantt-table td.cell.active { color: var(--white); font-weight: 700; }
-  .gantt-table tr:nth-child(even) td.ws-name { background: #fafafa; }
-  .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; font-size: 12px; }
-  .legend .item { display: flex; align-items: center; gap: 8px; }
-  .legend .swatch { width: 16px; height: 16px; border-radius: 3px; }
-  .month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .month-card { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
-  .month-card .head { background: var(--sir-blue); color: var(--white); padding: 12px 16px; }
-  .month-card .head .name { font-family: var(--serif); font-size: 20px; font-weight: 500; }
-  .month-card .head .count { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sir-gold-soft); }
-  .month-card .body { padding: 12px 16px; }
-  .month-card .item { padding: 9px 0; border-bottom: 1px dashed var(--grey-5); display: flex; gap: 10px; }
-  .month-card .item:last-child { border-bottom: none; }
-  .month-card .item .tag { width: 6px; flex-shrink: 0; border-radius: 100px; }
-  .month-card .item .content { flex: 1; font-size: 12px; line-height: 1.45; }
-  .month-card .item .title { color: var(--grey-1); font-weight: 600; margin-bottom: 2px; }
-  .month-card .item .meta { color: var(--grey-3); font-size: 11px; }
-  .cadence-list { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; overflow: hidden; }
-  .cadence-head, .cadence-row { display: grid; grid-template-columns: 110px 1fr 160px 180px; gap: 12px; padding: 14px 22px; align-items: center; }
-  .cadence-head { background: var(--sir-blue); color: var(--white); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
-  .cadence-row { border-top: 1px solid var(--grey-5); font-size: 13px; }
-  .freq-pill { display: inline-block; padding: 5px 12px; border-radius: 100px; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; text-align: center; min-width: 75px; }
-  .freq-Daily { background: #f5e3e0; color: #a93226; }
-  .freq-Weekly { background: #d9e4f0; color: #002349; }
-  .freq-Monthly { background: #e3e8f5; color: #1C3177; }
-  .freq-Quarterly { background: rgba(194,155,64,0.18); color: #8B6B30; }
-  .freq-Annual { background: var(--grey-5); color: var(--grey-2); }
-  .freq-Adhoc, .freq-Ad-hoc { background: #f0f0f0; color: var(--grey-2); }
-  .strip-card { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; padding: 16px 22px; display: grid; grid-template-columns: 80px 1fr 200px 120px; gap: 16px; align-items: center; margin-bottom: 10px; border-left: 4px solid var(--sir-gold); }
-  .strip-card.monthly { border-left-color: var(--sir-blue); }
-  .strip-card.seasonal { border-left-color: var(--sir-gold); background: linear-gradient(90deg, rgba(194,155,64,0.06), var(--white) 30%); }
-  .strip-card .month { font-family: var(--serif); font-size: 22px; color: var(--sir-blue); font-weight: 500; }
-  .strip-card .desc .title { font-weight: 700; color: var(--sir-blue); font-size: 13px; margin-bottom: 4px; letter-spacing: 0.3px; }
-  .strip-card .desc .sub { font-size: 12px; color: var(--grey-2); }
-  .strip-card .owner { font-size: 11px; color: var(--grey-3); letter-spacing: 1px; text-transform: uppercase; }
-  .strip-card .status-cell { text-align: right; }
-  .strip-card .badge.Locked { background: rgba(0,35,73,0.1); color: var(--sir-blue); }
-  .strip-card .badge.Active { background: rgba(47,125,79,0.15); color: var(--green); }
-  .strip-card .badge.Pending { background: var(--grey-5); color: var(--grey-3); }
-  .qmr-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .qmr-week { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; padding: 16px; }
-  .qmr-week .num { background: var(--sir-blue); color: var(--white); padding: 4px 10px; border-radius: 3px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; display: inline-block; margin-bottom: 10px; }
-  .qmr-week .title { font-weight: 700; color: var(--sir-blue); font-size: 13px; margin-bottom: 6px; line-height: 1.35; }
-  .qmr-week .owner { font-size: 11px; color: var(--grey-3); }
-  .social-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .social-day { background: var(--white); border: 1px solid var(--grey-5); border-radius: 4px; padding: 18px; }
-  .social-day .day { font-family: var(--serif); font-size: 22px; color: var(--sir-blue); margin-bottom: 6px; }
-  .social-day .format { font-weight: 700; color: var(--grey-1); font-size: 13px; margin-bottom: 10px; }
-  .social-day .meta { font-size: 11px; color: var(--grey-3); line-height: 1.5; }
-  footer { background: var(--sir-blue); color: var(--grey-4); padding: 36px 48px; margin-top: 64px; }
-  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 48px; max-width: 1500px; margin: 0 auto; }
-  footer h4 { font-family: var(--serif); color: var(--sir-gold-soft); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; margin-bottom: 12px; }
-  footer p { font-size: 12px; line-height: 1.7; }
-  footer a { color: var(--grey-4); }
-  .disclaimer { max-width: 1500px; margin: 28px auto 0; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 10px; line-height: 1.7; color: rgba(255,255,255,0.4); }
-  @media (max-width: 1100px) {
-    .kpi-grid, .sig-grid, .social-grid { grid-template-columns: 1fr 1fr; }
-    .qmr-grid { grid-template-columns: 1fr 1fr; }
-    .month-grid { grid-template-columns: 1fr; }
-    .two-col { grid-template-columns: 1fr; }
-    .spend-summary { grid-template-columns: 1fr 1fr; }
-    .channel-head, .channel-row { grid-template-columns: 1fr 1fr; }
-    .workstream-row { grid-template-columns: 1fr; gap: 8px; }
-    .touch-head, .touch-row, .cadence-head, .cadence-row { grid-template-columns: 1fr; gap: 6px; }
-    .strip-card { grid-template-columns: 1fr; }
-    .hero h1 { font-size: 32px; }
-    main, .topbar, .hero, .tabs, footer { padding-left: 20px; padding-right: 20px; }
-  }
+:root{
+  --navy:#002349; --navy2:#0b3a6b; --gold:#C29B40; --ink:#2b2b2b; --grey:#67737a;
+  --line:#e4e2dc; --bg:#f7f6f3; --card:#ffffff; --soft:#eef1f5;
+  --good:#2e6b54; --goodbg:#e7f0ec; --warn:#8a6d1a; --warnbg:#f7eccf; --due:#8a4b12; --duebg:#f6e2d3;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Source Sans 3",Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);font-size:15px;line-height:1.45}
+a{color:var(--navy2);text-decoration:none}
+a:hover{text-decoration:underline}
+.app{display:flex;min-height:100vh}
+/* Sidebar */
+.side{width:240px;background:var(--navy);color:#fff;flex:0 0 240px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
+.brand{padding:24px 22px 18px;border-bottom:1px solid rgba(255,255,255,.12)}
+.brand .mark{font-family:"Cormorant Garamond",Garamond,Georgia,serif;font-size:21px;letter-spacing:.5px;line-height:1.15;font-weight:500}
+.brand .sub{font-size:10.5px;letter-spacing:2.5px;text-transform:uppercase;color:#aebfd2;margin-top:7px}
+nav{padding:14px 0;flex:1}
+nav a{display:flex;align-items:center;gap:11px;color:#d7e0ec;padding:11px 22px;font-size:14.5px;cursor:pointer;border-left:3px solid transparent}
+nav a .ic{width:7px;height:7px;border-radius:50%;background:#5b769b}
+nav a:hover{background:rgba(255,255,255,.05);text-decoration:none;color:#fff}
+nav a.active{background:rgba(255,255,255,.08);color:#fff;border-left-color:var(--gold)}
+nav a.active .ic{background:var(--gold)}
+.side .foot{padding:16px 22px;border-top:1px solid rgba(255,255,255,.12);font-size:10.5px;color:#8ea0b8;line-height:1.5}
+/* Main */
+main{flex:1;min-width:0}
+.top{background:var(--card);border-bottom:1px solid var(--line);padding:18px 34px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:5}
+.top h1{font-family:"Cormorant Garamond",Garamond,Georgia,serif;font-weight:500;font-size:27px;margin:0;color:var(--navy)}
+.top .meta{font-size:12.5px;color:var(--grey);display:flex;align-items:center;gap:10px}
+.top .meta b{color:var(--ink)}
+.refresh{border:1px solid var(--line);background:#fff;color:var(--navy);padding:4px 12px;border-radius:20px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.refresh:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.refresh.stale{border-color:var(--gold);color:var(--gold)}
+.wrap{padding:26px 34px 60px;max-width:1180px}
+.page{display:none}
+.page.active{display:block}
+h2.sec{font-family:"Cormorant Garamond",Garamond,Georgia,serif;font-weight:600;font-size:23px;color:var(--navy);margin:34px 0 4px;letter-spacing:.3px}
+h2.sec:first-child{margin-top:4px}
+.sec-note{color:var(--grey);font-size:13px;margin:0 0 14px}
+.rule{height:1px;background:var(--line);margin:8px 0 18px}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:6px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--navy);border-radius:3px;padding:15px 16px}
+.kpi .n{font-family:"Cormorant Garamond",Garamond,serif;font-size:34px;font-weight:600;color:var(--navy);line-height:1}
+.kpi .l{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--grey);margin-top:6px}
+.kpi.gold{border-top-color:var(--gold)} .kpi.gold .n{color:var(--gold)}
+/* Cards & tables */
+.card{background:var(--card);border:1px solid var(--line);border-radius:3px;margin:14px 0 22px;overflow:hidden}
+.card .hd{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.card .hd .t{font-weight:600;color:var(--navy);font-size:15px}
+.card .hd .t .badge{display:inline-block;margin-left:8px;background:var(--soft);color:var(--navy);border-radius:20px;padding:1px 9px;font-size:12px;font-weight:600;vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:600;color:var(--grey);font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:9px 18px;border-bottom:1px solid var(--line);background:#fbfaf8;position:sticky}
+td{padding:10px 18px;border-bottom:1px solid #f0efe9;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#fcfbf8}
+.name{font-weight:500;color:var(--ink);max-width:640px}
+.muted{color:var(--grey)}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px;white-space:nowrap}
+.tag.co{background:var(--soft);color:var(--navy)} .tag.ag{background:#f3eee2;color:var(--gold)}
+.pp{display:inline-block;font-size:12.5px;font-weight:600;color:#fff;background:var(--navy);padding:3px 10px;border-radius:3px}
+.pp:hover{background:var(--navy2);text-decoration:none}
+.pill{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.pill.warn{background:var(--warnbg);color:var(--warn)} .pill.due{background:var(--duebg);color:var(--due)}
+.pill.good{background:var(--goodbg);color:var(--good)}
+.empty{padding:20px 18px;color:var(--grey);font-size:13.5px;background:repeating-linear-gradient(45deg,#fbfaf8,#fbfaf8 10px,#f6f4ee 10px,#f6f4ee 20px)}
+.empty b{color:var(--ink)}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.cols2{grid-template-columns:1fr}.side{display:none}}
+/* Campaign chips */
+.campgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.campcard{background:var(--card);border:1px solid var(--line);border-radius:3px}
+.campcard .ch{padding:11px 15px;border-bottom:1px solid var(--line);font-weight:600;color:var(--navy);display:flex;justify-content:space-between}
+.campcard ul{margin:0;padding:8px 0;list-style:none}
+.campcard li{padding:6px 15px;font-size:13px;border-bottom:1px solid #f4f2ec}
+.campcard li:last-child{border:none}
+.campcard li .d{color:var(--grey);font-size:11.5px}
+/* Calendar */
+.calleg{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--grey);margin:6px 0 14px}
+.calleg span{display:inline-flex;align-items:center;gap:6px}
+.calleg i{width:11px;height:11px;border-radius:2px;display:inline-block}
+.month{margin:0 0 26px}
+.month h3{font-family:"Cormorant Garamond",serif;font-weight:600;font-size:20px;color:var(--navy);margin:0 0 8px}
+.cal{width:100%;border-collapse:collapse;table-layout:fixed;background:var(--card);border:1px solid var(--line)}
+.cal th{text-align:center;font-size:10.5px;padding:7px 0;background:var(--navy);color:#dbe5f0;border:none;position:static}
+.cal td{border:1px solid var(--line);height:96px;padding:5px 6px;vertical-align:top;width:14.28%}
+.cal td.we{background:#faf9f6}
+.cal td.empty{background:#f4f2ec}
+.cal td.hi{box-shadow:inset 0 3px 0 var(--gold)}
+.cal .dn{display:inline-block;font-size:11.5px;color:var(--grey);font-weight:600;min-width:18px;text-align:center}
+.cal td.today .dn{background:var(--navy);color:#fff;border-radius:50%;padding:1px 6px}
+.evt{font-size:10.5px;line-height:1.25;margin-top:3px;padding:2px 5px;border-radius:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.evt.np{background:var(--soft);color:var(--navy)}
+.evt.npa{background:#f3eee2;color:#7a6320}
+.evt.prod{background:var(--goodbg);color:var(--good)}
+.evt.key{background:var(--duebg);color:var(--due);font-weight:600}
+.more{font-size:10px;color:var(--grey);margin-top:2px}
+/* Budget */
+.bars{margin:6px 0}
+.bar{display:grid;grid-template-columns:170px 1fr 92px;align-items:center;gap:12px;padding:7px 0}
+.bar .bl{font-size:13px}
+.bar .bt{background:var(--soft);border-radius:2px;height:18px;overflow:hidden}
+.bar .bf{height:100%;background:linear-gradient(90deg,var(--navy),var(--navy2))}
+.bar .bv{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:13px;color:var(--navy)}
+.spark{display:flex;align-items:flex-end;gap:6px;height:120px;padding:8px 4px;border-bottom:1px solid var(--line)}
+.spark .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end;height:100%}
+.spark .cb{width:60%;background:var(--gold);border-radius:2px 2px 0 0;min-height:2px}
+.spark .cl{font-size:10px;color:var(--grey)}
+.vsrow{display:grid;grid-template-columns:60px 1fr 1fr;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #f0efe9;font-size:13px}
+.vsrow .m{position:relative;height:20px;background:var(--soft);border-radius:2px}
+.vsrow .mb{position:absolute;left:0;top:0;height:100%;border-radius:2px}
+.legend2{font-size:12px;color:var(--grey);display:flex;gap:16px;margin-top:8px}
+.legend2 i{width:11px;height:11px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.subnav{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 4px}
+.subnav button{border:1px solid var(--line);background:#fff;color:var(--grey);padding:6px 13px;border-radius:20px;font:inherit;font-size:12.5px;cursor:pointer}
+.subnav button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.agentblock{margin:0 0 6px}
+.agentblock summary{cursor:pointer;font-weight:600;color:var(--navy);padding:10px 16px;background:#fbfaf8;border:1px solid var(--line);border-radius:3px;margin-top:8px;list-style:none;display:flex;justify-content:space-between}
+.agentblock summary::-webkit-details-marker{display:none}
+.agentblock[open] summary{border-bottom-left-radius:0;border-bottom-right-radius:0}
+.agentblock .inner{border:1px solid var(--line);border-top:none}
 </style>
 </head>
 <body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="mark">Aspen Snowmass<br>Sotheby's International Realty</div>
+      <div class="sub">Command Center</div>
+    </div>
+    <nav id="nav">
+      <a data-pg="summary" class="active"><span class="ic"></span>Summary</a>
+      <a data-pg="calendar"><span class="ic"></span>Calendar</a>
+      <a data-pg="social"><span class="ic"></span>Social Media</a>
+      <a data-pg="programmatic"><span class="ic"></span>Programmatic</a>
+      <a data-pg="budget"><span class="ic"></span>Budget</a>
+      <a data-pg="agents"><span class="ic"></span>Agents</a>
+    </nav>
+    <div class="foot">Internal &amp; client operations tool.<br>Each Office Is Independently Owned and Operated.</div>
+  </aside>
+  <main>
+    <div class="top">
+      <h1 id="ptitle">Summary</h1>
+      <div class="meta">Live data: <b id="gen"></b><button id="refresh" class="refresh" title="Fetch the latest published version (bypasses the browser cache)">↻ Refresh</button></div>
+    </div>
+    <div class="wrap">
+      <section class="page active" id="pg-summary"></section>
+      <section class="page" id="pg-calendar"></section>
+      <section class="page" id="pg-social"></section>
+      <section class="page" id="pg-programmatic"></section>
+      <section class="page" id="pg-budget"></section>
+      <section class="page" id="pg-agents"></section>
+    </div>
+  </main>
+</div>
 
 <script>
-// CONFIG â€” your Google Sheet ID goes inside the quotes below
-const SHEET_ID = "1T_TRnSnFFFZvSjChCGaQC7N5-qvbvyb70XzYuLPJ3Ek";
+/* ============================================================
+   DATA is a self-contained snapshot baked into this file.
+   REFRESH MODEL: the scheduled routine re-pulls Asana + Airtable +
+   the budget sheet, reads the manual tabs from the central Google
+   Sheet, rebuilds this file, and pushes it to GitHub Pages. So the
+   page is always a fresh, fully-static snapshot — no client-side API
+   calls, no CORS, works offline. (See SETUP_AND_REFRESH.md.)
+   ============================================================ */
+var DATA = {"generated": "2026-06-22", "kpi": {"in_pageproof": 20, "due_30": 14, "published_30": 6, "newspaper_company": 108, "budget_total": 578941}, "home": {"in_pageproof": [{"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Lex Tarumianz | 256 Twining Flats", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PCXSM9V8GDR5418P", "proofDeadline": "2026-05-01", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214382471842272", "corp": "Company Ad"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | The Burggraf's ", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PFD07JP1K4PKNA1D", "proofDeadline": "2026-05-08", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214312780735787", "corp": "Company Ad"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | The Burggraf's | 155 & 200 Sabin Drive", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PQR33PNLM4I8OPQE", "proofDeadline": "2026-05-08", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215839089517987", "corp": "Company Ad"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Chris & Chris - 15 Willow", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PSS4A0BJHKXF6MAS", "proofDeadline": "2026-05-19", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215596370682498", "corp": "Company Ad"}, {"name": "Sotheby's | March 20 Shoot - Chris Klug Open House 2 Commercial", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PGRKL4D9XWCWD4NI", "proofDeadline": "2026-05-22", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214153949228439", "corp": "Company Ad"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Stephanie Williams", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PSUV81VRO12E330M", "proofDeadline": "2026-06-03", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214810273684195", "corp": "Company Ad"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Will McCullough - The W", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PAOW7T4TJPIGQHYD", "proofDeadline": "2026-06-03", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215607046627802", "corp": "Company Ad"}, {"name": "06-20-26- Aspen Daily News - Full Page - SC 10 x 14- 6 x 14- Sotheby's Company - - ", "publishDate": "2026-06-20", "proofUrl": "https://app.pageproof.com/proof-screen/P47ICEMXWB4395YY", "proofDeadline": "2026-06-17", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215518573990706", "corp": "Company Ad"}, {"name": "06-20-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-20", "proofUrl": "https://app.pageproof.com/proof-screen/P3TO6WE6ESPN41FB", "proofDeadline": "2026-06-17", "section": "Ready to submit", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214853364905134", "corp": "Company Ad"}, {"name": "06-22-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Listing", "publishDate": "2026-06-22", "proofUrl": "https://app.pageproof.com/proof-screen/PRNIYG51UU5YRIHD", "proofDeadline": "2026-06-17", "section": "Ready to submit", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215564213557919", "corp": "Company Ad"}, {"name": "06-23-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Listing", "publishDate": "2026-06-23", "proofUrl": "https://app.pageproof.com/proof-screen/PBBJIUD4UX4UI4CU", "proofDeadline": "2026-06-18", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215580655641290", "corp": "Company Ad"}, {"name": "06-23-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Open House", "publishDate": "2026-06-23", "proofUrl": "https://app.pageproof.com/proof-screen/P39UOVNUBSAEGKYC", "proofDeadline": "2026-06-18", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215578112059537", "corp": "Company Ad"}, {"name": "06-24-26- Aspen Daily News - Full Page - SC 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Open House", "publishDate": "2026-06-24", "proofUrl": "https://app.pageproof.com/proof-screen/P3ODQGMPM20DDD6P", "proofDeadline": "2026-06-19", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215578116264896", "corp": "Company Ad"}, {"name": "06-24-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Rental", "publishDate": "2026-06-24", "proofUrl": "https://app.pageproof.com/proof-screen/P1HHSSXKBQ2IEIKG", "proofDeadline": "2026-06-19", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215580663615178", "corp": "Company Ad"}, {"name": "06-25-26- Aspen Daily News - Full Page - SC 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Listing", "publishDate": "2026-06-25", "proofUrl": "https://app.pageproof.com/proof-screen/P8DHCWC5UHM3RY6I", "proofDeadline": "2026-06-22", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215580664772925", "corp": "Company Ad"}, {"name": "06-25-26- Aspen Times - 1/4 Page - Vertical - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Ryan Smalls -Pg 5", "publishDate": "2026-06-25", "proofUrl": "https://app.pageproof.com/proof-screen/P0U0MW28MT4K8501", "proofDeadline": "2026-06-22", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215198945777342", "corp": "Company Ad"}, {"name": "06-26-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Brand Ad", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PYTH6IXIU2BFD850", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215598391753442", "corp": "Company Ad"}, {"name": "06-26-26- Aspen Daily News - Digital - Page 0 - Sotheby's 10 x 14, 600 x 600, 300 x 300- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/P6D5ID7FXC7397EM", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214851949478955", "corp": "Company Ad"}, {"name": "06-27-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Listing", "publishDate": "2026-06-27", "proofUrl": "https://app.pageproof.com/proof-screen/P429BTISX85BKATS", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215582252313149", "corp": "Company Ad"}, {"name": "Sotheby's | March 2026 Shoot - Etta & Ian McLendon | Open House 2", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PVFPPLW4DMWDQQB6", "proofDeadline": "2026-06-29", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215505755576517", "corp": "Company Ad"}], "due_30": [{"name": "06-25-26- Aspen Daily News - Full Page - SC 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Listing", "publishDate": "2026-06-25", "proofUrl": "https://app.pageproof.com/proof-screen/P8DHCWC5UHM3RY6I", "proofDeadline": "2026-06-22", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215580664772925", "corp": "Company Ad"}, {"name": "06-25-26- Aspen Times - 1/4 Page - Vertical - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Ryan Smalls -Pg 5", "publishDate": "2026-06-25", "proofUrl": "https://app.pageproof.com/proof-screen/P0U0MW28MT4K8501", "proofDeadline": "2026-06-22", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215198945777342", "corp": "Company Ad"}, {"name": "06-25-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Open House", "publishDate": "2026-06-25", "proofUrl": null, "proofDeadline": "2026-06-22", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215578121559522", "corp": null}, {"name": "06-25-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-25", "proofUrl": null, "proofDeadline": "2026-06-22", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214853440071434", "corp": "Company Ad"}, {"name": "06-26-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Brand Ad", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PYTH6IXIU2BFD850", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215598391753442", "corp": "Company Ad"}, {"name": "06-26-26- Aspen Daily News - Digital - Page 0 - Sotheby's 10 x 14, 600 x 600, 300 x 300- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/P6D5ID7FXC7397EM", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214851949478955", "corp": "Company Ad"}, {"name": "06-26-26- Aspen Daily News - Impact Ad - Sotheby's 1920 x 400, 800 x 250- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-26", "proofUrl": null, "proofDeadline": "2026-06-23", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214864058793405", "corp": "Company Ad"}, {"name": "06-26-26- Glenwood Post Independent - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "publishDate": "2026-06-26", "proofUrl": null, "proofDeadline": "2026-06-23", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215578123671617", "corp": null}, {"name": "06-27-26- Aspen Daily News - Full Page [Pg 2] - SC 10 x 14- 6 x 14- Sotheby's Company - - Rental", "publishDate": "2026-06-27", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "Assigned - Not Started", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215582977279919", "corp": "Company Ad"}, {"name": "06-28-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "publishDate": "2026-06-28", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "Assigned - Not Started", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215559423684036", "corp": "Company Ad"}, {"name": "06-27-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Listing", "publishDate": "2026-06-27", "proofUrl": "https://app.pageproof.com/proof-screen/P429BTISX85BKATS", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215582252313149", "corp": "Company Ad"}, {"name": "06-27-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-27", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214869167119715", "corp": "Company Ad"}, {"name": "06-30-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Open House", "publishDate": "2026-06-30", "proofUrl": null, "proofDeadline": "2026-06-25", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215580675342180", "corp": "Company Ad"}, {"name": "Sotheby's | March 2026 Shoot - Etta & Ian McLendon | Open House 2", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PVFPPLW4DMWDQQB6", "proofDeadline": "2026-06-29", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215505755576517", "corp": "Company Ad"}], "published": [{"name": "06-20-26- Aspen Daily News - Full Page [Pg 2] - SC 10 x 14- 6 x 14- Sotheby's Company - - Rental", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215524131932387", "corp": "Company Ad"}, {"name": "06-19-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Listing", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215074323072784", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Daily News - Digital - Page 0 - Sotheby's 10 x 14, 600 x 600, 300 x 300- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214851613814865", "corp": "Company Ad"}, {"name": "06-19-26- Aspen Daily News - Impact Ad - Sotheby's 1920 x 400, 800 x 250- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214853319550738", "corp": "Company Ad"}, {"name": "06-18-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Open House", "publishDate": "2026-06-18", "proofUrl": null, "proofDeadline": "2026-06-15", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215682762263845", "corp": "Company Ad"}, {"name": "06-18-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Brand Ad", "publishDate": "2026-06-18", "proofUrl": null, "proofDeadline": "2026-06-15", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214853217436959", "corp": "Company Ad"}]}, "agents": {"in_pageproof": [{"name": "Sotheby's | March 2026 Shoot - Fran Hogan | Open House 1 Commercial - Programmatic CTV", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PMP1S2CVAOTAEBLU", "proofDeadline": "2026-04-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213864301452007", "corp": null}, {"name": "Sotheby's | March 2026 Shoot - Ashley Fedderson  | Open House 1 Commercial - YouTube TV", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PPXJS0QWNU6OV939", "proofDeadline": "2026-05-12", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114349868342", "corp": null}, {"name": "Sotheby's | Chris Klug Programmatic CTV June 2026 | 660 Brush Creek", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/P8NCNA09476F5XFU", "proofDeadline": "2026-06-16", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215459338671878", "corp": "Agent Ad"}, {"name": "The Midland Residences | Banner June 2026", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PJFU3JLMDOAPVK76", "proofDeadline": "2026-06-16", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215596432332750", "corp": "Agent Ad"}, {"name": "06-26-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Garrett Reuss -", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PTVHR38LIF7UH6YA", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215074883116215", "corp": "Agent Ad"}, {"name": "06-26-26- Aspen Daily News - Sticky Anchor - 1 - Sotheby's 1140 x 90, 728 x 90, 320 x 50- - Sotheby's - The Midland Residences -", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PF03A8C26ESN3UTM", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214917372867906", "corp": "Agent Ad"}, {"name": "Sotheby's | The Midland Residences | Fence Banners | June 2026", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PLA32AYDO2PEU0VV", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215839039994976", "corp": "Agent Ad"}, {"name": "06-26-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PMUFAMP79F9KAH9C", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214987066707627", "corp": "Agent Ad"}, {"name": "06-26-26- Aspen Times - 1/4 Page - Vertical - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Soffia Wardy -Pg 8", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PQBRNALEFNXG0PUH", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215515656304155", "corp": "Agent Ad"}, {"name": "06-29-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Terry Harrington -", "publishDate": "2026-06-29", "proofUrl": "https://app.pageproof.com/proof-screen/P7POVOP2ITCL0K1T", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215075157725111", "corp": "Agent Ad"}, {"name": "06-29-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "publishDate": "2026-06-29", "proofUrl": "https://app.pageproof.com/proof-screen/PKP0B49FWI51C70A", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215069999153364", "corp": null}, {"name": "06-27-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -FF", "publishDate": "2026-06-27", "proofUrl": "https://app.pageproof.com/proof-screen/PW14KJ27CH7QH676", "proofDeadline": "2026-06-25", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215846364890022", "corp": "Agent Ad"}, {"name": "06-27-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "publishDate": "2026-06-27", "proofUrl": "https://app.pageproof.com/proof-screen/PQHROL4B4D66RL0C", "proofDeadline": "2026-06-25", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214989151201771", "corp": "Agent Ad"}, {"name": "06-28-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "publishDate": "2026-06-28", "proofUrl": "https://app.pageproof.com/proof-screen/PKYA9OYHR23BRQU2", "proofDeadline": "2026-06-25", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214987223592421", "corp": "Agent Ad"}, {"name": "LIVSIR | Doyle Richmond | Kindred Resort Reel 1", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/POGHT012I6OTXQM9", "proofDeadline": null, "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1207754530869361/task/1215807725338962", "corp": null}, {"name": "SOTHEBYS | 4TH JULY SIZZLE REEL", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PK7V20QVVHDV44X5", "proofDeadline": null, "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1215733202880533", "corp": null}, {"name": "SOTHEBYS | Lane & Scott Social", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PW2TFH6JKLTTA8VG", "proofDeadline": null, "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1215182712422778", "corp": null}, {"name": "SOTHEBYS | Michael Perau Reel 1", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/P5ACD3JBEUS3Y1NF", "proofDeadline": null, "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1215182573199878", "corp": null}], "due_30": [{"name": "06-25-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -", "publishDate": "2026-06-25", "proofUrl": null, "proofDeadline": "2026-06-22", "section": "In Progress", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214987113933881", "corp": null}, {"name": "06-25-26- Aspen Daily News - 1/4 page (Vertical) - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Ryan Smalls -FF", "publishDate": "2026-06-25", "proofUrl": null, "proofDeadline": "2026-06-22", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215198634597191", "corp": null}, {"name": "06-25-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Soffia Wardy -", "publishDate": "2026-06-25", "proofUrl": null, "proofDeadline": "2026-06-22", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215515452424076", "corp": null}, {"name": "06-26-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Garrett Reuss -", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PTVHR38LIF7UH6YA", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215074883116215", "corp": "Agent Ad"}, {"name": "06-26-26- Aspen Daily News - Sticky Anchor - 1 - Sotheby's 1140 x 90, 728 x 90, 320 x 50- - Sotheby's - The Midland Residences -", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PF03A8C26ESN3UTM", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214917372867906", "corp": "Agent Ad"}, {"name": "Sotheby's | The Midland Residences | Fence Banners | June 2026", "publishDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PLA32AYDO2PEU0VV", "proofDeadline": "2026-06-23", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215839039994976", "corp": "Agent Ad"}, {"name": "Sotheby's | Scott Bayens Aspen Daily News Sticky Anchors 1140 x 90, 728 x 90, 320 x 50", "publishDate": null, "proofUrl": null, "proofDeadline": "2026-06-23", "section": "In Progress", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215841867523634", "corp": "Agent Ad"}, {"name": "06-26-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Penney Carruth -Pg 3", "publishDate": "2026-06-26", "proofUrl": null, "proofDeadline": "2026-06-23", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214903349793793", "corp": null}, {"name": "06-29-26- Aspen Times - Standard Slot HPTO - Sotheby's 300 x 250, 728 x 90, 320 x 50, 600 x 500, 640 x 100, 1456 x 180- - Sotheby's - Garrett Reuss -", "publishDate": "2026-06-29", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "Assigned - Not Started", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214985994071357", "corp": "Agent Ad"}, {"name": "Sotheby's | Sally Shiekman June 2026 Programmatic CTV | 990 E Hopkins Ave Brand Ad", "publishDate": null, "proofUrl": null, "proofDeadline": "2026-06-24", "section": "Brief pending", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215814216731219", "corp": "Agent Ad"}, {"name": "06-26-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PMUFAMP79F9KAH9C", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214987066707627", "corp": "Agent Ad"}, {"name": "06-26-26- Aspen Times - 1/4 Page - Vertical - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Soffia Wardy -Pg 8", "publishDate": "2026-06-26", "proofUrl": "https://app.pageproof.com/proof-screen/PQBRNALEFNXG0PUH", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215515656304155", "corp": "Agent Ad"}, {"name": "06-29-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Terry Harrington -", "publishDate": "2026-06-29", "proofUrl": "https://app.pageproof.com/proof-screen/P7POVOP2ITCL0K1T", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215075157725111", "corp": "Agent Ad"}, {"name": "06-29-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "publishDate": "2026-06-29", "proofUrl": "https://app.pageproof.com/proof-screen/PKP0B49FWI51C70A", "proofDeadline": "2026-06-24", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215069999153364", "corp": null}, {"name": "06-27-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - The Shea Team -", "publishDate": "2026-06-27", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215075158369998", "corp": null}, {"name": "06-27-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - The Shea Team -Pg 14", "publishDate": "2026-06-27", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215517005399782", "corp": null}, {"name": "06-28-26- Aspen Times - 1/4 Page - Vertical - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Soffia Wardy -Pg 5", "publishDate": "2026-06-28", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215515910978815", "corp": null}, {"name": "06-28-26- Aspen Times - Front Page Large - Sotheby's 10 x 1.75- 6 x 1.75- Sotheby's - TBE Real Estate -", "publishDate": "2026-06-28", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214919314512645", "corp": null}, {"name": "06-29-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - TBE Real Estate -", "publishDate": "2026-06-29", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "New request", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214919340125942", "corp": null}, {"name": "06-27-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "publishDate": "2026-06-27", "proofUrl": null, "proofDeadline": "2026-06-24", "section": "Ready to submit", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214987115808510", "corp": "Agent Ad"}, {"name": "Sotheby's | Chris Klug Programmatic CTV June 2026 | 15 S Willow Court", "publishDate": null, "proofUrl": null, "proofDeadline": "2026-06-25", "section": "Assigned - Not Started", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215813426868287", "corp": "Agent Ad"}, {"name": "06-27-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -FF", "publishDate": "2026-06-27", "proofUrl": "https://app.pageproof.com/proof-screen/PW14KJ27CH7QH676", "proofDeadline": "2026-06-25", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215846364890022", "corp": "Agent Ad"}, {"name": "06-27-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "publishDate": "2026-06-27", "proofUrl": "https://app.pageproof.com/proof-screen/PQHROL4B4D66RL0C", "proofDeadline": "2026-06-25", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214989151201771", "corp": "Agent Ad"}, {"name": "06-28-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "publishDate": "2026-06-28", "proofUrl": "https://app.pageproof.com/proof-screen/PKYA9OYHR23BRQU2", "proofDeadline": "2026-06-25", "section": "In PageProof", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214987223592421", "corp": "Agent Ad"}], "published": [{"name": "06-22-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Chris Klug -", "publishDate": "2026-06-22", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214985065538183", "corp": "Agent Ad"}, {"name": "06-21-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Sally Shiekman -", "publishDate": "2026-06-21", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215069993735143", "corp": "Agent Ad"}, {"name": "06-21-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "publishDate": "2026-06-21", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214987064533944", "corp": "Agent Ad"}, {"name": "06-21-26- Aspen Times - 1/4 Page - Vertical - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Soffia Wardy -Pg 5", "publishDate": "2026-06-21", "proofUrl": null, "proofDeadline": null, "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215515220134253", "corp": "Agent Ad"}, {"name": "06-21-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "publishDate": "2026-06-21", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214989391766117", "corp": "Agent Ad"}, {"name": "06-20-26- Aspen Daily News - 1/2 page (Vertical) - Sotheby's 6.61 x 10.42- 4 x 10.5- Sotheby's - Greg Didier & Terry Rogers -FF", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215677130414348", "corp": "Agent Ad"}, {"name": "06-20-26- Aspen Daily News - 1/3 pg (Vertical) - Sotheby's 4.92 x 10.42- 3 x 10.5- Sotheby's - Samantha Benomar -FF", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215784874326760", "corp": "Agent Ad"}, {"name": "06-20-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Soffia Wardy -", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215514972652419", "corp": "Agent Ad"}, {"name": "06-20-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Greg Didier & Terry Rogers - FF", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215680184390505", "corp": "Agent Ad"}, {"name": "06-20-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214986866803411", "corp": "Agent Ad"}, {"name": "06-20-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - The Shea Team -FF", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215517028562809", "corp": "Agent Ad"}, {"name": "06-20-26- Aspen Times - 1/4 Page - Vertical - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Penney Carruth -Pg 5", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215181587654592", "corp": "Agent Ad"}, {"name": "06-20-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "publishDate": "2026-06-20", "proofUrl": null, "proofDeadline": "2026-06-17", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214989089152615", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Daily News - 1/3 pg (Vertical) - Sotheby's 4.92 x 10.42- 3 x 10.5- Sotheby's - Samantha Benomar -FF", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215784653481922", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Greg Didier & Terry Rogers -FF", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215680183223071", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214986654968763", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Daily News - Sticky Anchor - 1 - Sotheby's 1140 x 90, 728 x 90, 320 x 50- - Sotheby's - The Midland Residences -", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214917371251434", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215070408056771", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Times - 1/4 Page - Vertical - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Soffia Wardy -Pg 8", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215514762435144", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Penney Carruth -Pg 3", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214903202181348", "corp": "Agent Ad"}, {"name": "06-19-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "publishDate": "2026-06-19", "proofUrl": null, "proofDeadline": "2026-06-16", "section": "Complete", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214989227272279", "corp": "Agent Ad"}]}, "campaigns": {"Airport": [{"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Chris & Chris - 15 Willow", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215596370682498"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Chris Klug - 401 Carroll Drive", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214809460105238"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Chris Klug - 660 Brush Creek", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214810273684186"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Lex Tarumianz | 256 Twining Flats", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214382471842272"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Stephanie Williams", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214810273684195"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Terry & Greg 1470/1400 Tiehack Road (MLS# 191596)", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214809460105222"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | The Burggraf's ", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214312780735787"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | The Burggraf's | 155 & 200 Sabin Drive", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215839089517987"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Will McCullough - The W", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215607046627802"}, {"name": "Sotheby's | Summer 2026 Airport |  Chris Klug & Chris Hendrickson | S5 Brochure", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215604306762800"}, {"name": "Sotheby's | Brian Leasure | Airport update ", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1203715620955437/task/1215453854039870"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Becky Dombrowski", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214809460105213"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Caroline Sogard", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214809179934503"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | Terry & Greg 4076 Lower River Road (MLS# 190222)", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214809460105230"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | The Midland Residences", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214382471842283"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | The Shea Team 120 Running Mare", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214809460105254"}, {"name": "Sotheby's | Summer 2026 Airport  | VIDEO | The Shea Team 6770 Castle Creek", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214809460105246"}, {"name": "Sotheby's | Summer 2026 Airport |  Terry & Greg | Lounge 3 S15 Right", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214382591862591"}, {"name": "Sotheby's | Summer 2026 Airport |  Terry & Greg | S27", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214382472398277"}, {"name": "Sotheby's | Summer 2026 Airport | Caroline Sogard | S5", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214382591862584"}, {"name": "Sotheby's | Summer 2026 Airport | Chris Klug | Baggage Display Frame S28", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214544377468018"}, {"name": "Sotheby's | Summer 2026 Airport | Chris Klug | Baggage Wall S22 Right", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214544377468009"}, {"name": "Sotheby's | Summer 2026 Airport | Chris Klug | S5 - 15 S Willow Court", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215460459677892"}, {"name": "Sotheby's | Summer 2026 Airport | Company Ad | Gate 1 West Wall  S37 Left - Hank & Xanthe Carter", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214817640813770"}, {"name": "Sotheby's | Summer 2026 Airport | Company Ad | Gate 1 West Wall  S37 Left - Hank & Xanthe Carter_BROCHURE", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215448616077020"}, {"name": "Sotheby's | Summer 2026 Airport | Lex Tarumianz | S10 Right ", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214268923878550"}, {"name": "Sotheby's | Summer 2026 Airport | S15 Left-Becky Dombrowski", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214425508595188"}, {"name": "Sotheby's | Summer 2026 Airport | Stephanie Williams | S32", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214382591862578"}, {"name": "Sotheby's | Summer 2026 Airport | The Burggraf's | Baggage Wall S22 Left", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214272452266942"}, {"name": "Sotheby's | Summer 2026 Airport | The Midland Residences | S10 Left ", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214268923878554"}, {"name": "Sotheby's | Summer 2026 Airport | The Shea Team | S26 Baggage Display Frame", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214542883385146"}, {"name": "Sotheby's | Winter Airports 2025", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215145181635181"}], "Static": [{"name": "SOTHEBYS | STATIC 4TH JULY", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1203715620955437/task/1215733275090153"}], "Video": [], "Brochure": [{"name": "Sotheby's | Summer 2026 Airport |  Chris Klug & Chris Hendrickson | S5 Brochure", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215604306762800"}, {"name": "Sotheby's | Summer 2026 Airport | Company Ad | Gate 1 West Wall  S37 Left - Hank & Xanthe Carter_BROCHURE", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215448616077020"}], "Open House": [{"name": "06-23-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Open House", "section": "In PageProof", "runDate": "2026-06-23", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215578112059537"}, {"name": "06-24-26- Aspen Daily News - Full Page - SC 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Open House", "section": "In PageProof", "runDate": "2026-06-24", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215578116264896"}, {"name": "06-25-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Open House", "section": "New request", "runDate": "2026-06-25", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215578121559522"}, {"name": "06-30-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Open House", "section": "New request", "runDate": "2026-06-30", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215580675342180"}, {"name": "Sotheby's | March 2026 Shoot - Terry Harrington | Open House 1 Commercial - Programmatic CTV", "section": "Assigned - Not Started", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213914045965322"}, {"name": "Sotheby's | March 2026 Shoot Summer Open House 2025 2 | Terry Harrington", "section": "Assigned - Not Started", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215505755576524"}, {"name": "Sotheby's | March 2026 Shoot The Shea Team | Open House 1 30\" Commercial - YouTube TV", "section": "Assigned - Not Started", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213825211556970"}, {"name": "Sotheby's | March 20 Shoot - Chris Klug Open House 2 Commercial", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214153949228439"}, {"name": "Sotheby's | March 2026 Shoot - Ashley Fedderson  | Open House 1 Commercial - YouTube TV", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114349868342"}, {"name": "Sotheby's | March 2026 Shoot - Etta & Ian McLendon | Open House 2", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215505755576517"}, {"name": "Sotheby's | March 2026 Shoot - Fran Hogan | Open House 1 Commercial - Programmatic CTV", "section": "In PageProof", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213864301452007"}, {"name": "Sotheby's | March 2026 Shoot - Chris Klug | Open House 1 30 Second Commercial - YouTube TV", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213824830142485"}, {"name": "Sotheby's | March 2026 Shoot - Etta & Ian McLendon | Open House 1 - YouTube TV", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213914044937929"}, {"name": "Sotheby's | March 2026 Shoot - Fran Hogan | Open House 2 Commercial", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215368346528142"}, {"name": "Sotheby's | March 2026 Shoot - Julie Mandt | Open House 1 Commercial - Programmatic CTV", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114388184555"}, {"name": "Sotheby's | March 2026 Shoot - Lane & Scott | Open House 1 Commercial - Programmatic CTV", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114388818794"}, {"name": "Sotheby's | March 2026 Shoot - Mark & Chantal | Open House 1 Commercial - Programmatic CTV", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114095079956"}, {"name": "Sotheby's | March 2026 Shoot - Michael Perau | Open House 2 Commercial", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215368346528147"}, {"name": "Sotheby's | March 2026 Shoot - Sally Shiekman | Open House 1 Commercial - YouTube TV", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213865583296424"}, {"name": "Sotheby's | March 2026 Shoot - Sally Shiekman | Open House 2 Commercial", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215368346528150"}, {"name": "Sotheby's | March 2026 Shoot - Soffia Wardy | Open House 1 Commercial - Programmatic CTV", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213860315029731"}, {"name": "Sotheby's | March 2026 Shoot - Soffia Wardy | Open House 2 Commercial", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215368346528139"}, {"name": "Sotheby's | March 2026 Shoot The Shea Team | Open House 2 Commercial", "section": "New request", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214153708201785"}, {"name": "Sotheby's | March 2026 Shoot - Michael Perau | Open House 1 Commercial - YouTube TV", "section": "On hold", "runDate": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213865581981684"}], "Magazine": [{"name": "06-16-26- Local Magazine - Full Page (Bleeds) 9.5 x 11.325- - Sotheby's - Scott Bayens -", "section": "New request", "runDate": "2026-06-16", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215298798289351"}], "ALI": []}, "key_dates": [{"name": "Snowmass Rodeo (Weekly on a Wed)", "date": "2026-06-24", "section": "Shoot bookings"}, {"name": "Q2 2026 Market Report [TARGET]", "date": "2026-06-24", "section": "Quarterly \u2014 Market Reports"}, {"name": "Snowmass Thursday Free Concert Series", "date": "2026-06-25", "section": "Shoot bookings"}, {"name": "JAS June Experience", "date": "2026-06-28", "section": "Shoot bookings"}, {"name": "Summer 2026 Airport campaign LIVE", "date": "2026-07-01", "section": "Magazines & Airport"}, {"name": "Aspen Music Festival program ad runs (July)", "date": "2026-07-01", "section": "Seasonal campaigns"}, {"name": "Social content calendar LIVE \u2014 Jul 2026", "date": "2026-07-01", "section": "Monthly \u2014 Social content calendar"}, {"name": "Aspen Ideas Festival", "date": "2026-07-01", "section": "Shoot bookings"}, {"name": "Monthly Market Snapshot / stat ad due \u2014 Jul 2026", "date": "2026-07-03", "section": "Monthly \u2014 Market Snapshot"}, {"name": "July 4th brand glossy wrap", "date": "2026-07-03", "section": "Seasonal campaigns"}, {"name": "4th of July \u2013 parade / Boogie's Fun Run", "date": "2026-07-04", "section": "Shoot bookings"}, {"name": "Aspen Magazine 'Arts & Culture' issue publishes", "date": "2026-07-08", "section": "Magazines & Airport"}, {"name": "Aspen Music Festival, \"Music on the Mountain\"", "date": "2026-07-11", "section": "Shoot bookings"}, {"name": "Contract: 1-month extension \u2014 renewal decision [CONFIRM]", "date": "2026-07-15", "section": "Milestones & confirms"}, {"name": "Art Crush", "date": "2026-07-31", "section": "Shoot bookings"}, {"name": "Social content calendar LIVE \u2014 Aug 2026", "date": "2026-08-01", "section": "Monthly \u2014 Social content calendar"}, {"name": "Monthly Market Snapshot / stat ad due \u2014 Aug 2026", "date": "2026-08-03", "section": "Monthly \u2014 Market Snapshot"}, {"name": "Labor Day brand glossy wrap", "date": "2026-08-07", "section": "Seasonal campaigns"}, {"name": "7\u20138 August \u2013 Up in the Sky festival", "date": "2026-08-08", "section": "Shoot bookings"}, {"name": "Social content calendar LIVE \u2014 Sep 2026", "date": "2026-09-01", "section": "Monthly \u2014 Social content calendar"}, {"name": "Monthly Market Snapshot / stat ad due \u2014 Sep 2026", "date": "2026-09-03", "section": "Monthly \u2014 Market Snapshot"}, {"name": "September \u2013 Motherlode Volleyball Tournament", "date": "2026-09-05", "section": "Shoot bookings"}, {"name": "Labor Day \u2014 Jazz Aspen Snowmass Festival", "date": "2026-09-07", "section": "Shoot bookings"}], "reels": [{"name": "LIVSIR | Doyle Richmond | Key Stone Reel", "section": "In PageProof", "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1207754530869361/task/1215462911635415"}, {"name": "LIVSIR | Doyle Richmond | Kindred Resort Reel 1", "section": "In PageProof", "proofUrl": "https://app.pageproof.com/proof-screen/POGHT012I6OTXQM9", "permalink": "https://app.asana.com/1/1200904395422616/project/1207754530869361/task/1215807725338962"}, {"name": "MIDLANDS | Springtime Reel", "section": "Assigned - Not Started", "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1215717825046719"}, {"name": "SOTHEBYS | 257 MOUNTAIN LAUREL REEL", "section": "In Progress", "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1215760649286724"}, {"name": "SOTHEBYS | 4TH JULY SIZZLE REEL", "section": "In PageProof", "proofUrl": "https://app.pageproof.com/proof-screen/PK7V20QVVHDV44X5", "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1215733202880533"}, {"name": "SOTHEBYS | LAUGHING BLOOPER REEL", "section": "On hold", "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1214231326977183"}, {"name": "SOTHEBYS | Liv-Inspired Reel 1", "section": "New request", "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1213918508620001"}, {"name": "SOTHEBYS | Michael Perau Reel 1", "section": "In PageProof", "proofUrl": "https://app.pageproof.com/proof-screen/P5ACD3JBEUS3Y1NF", "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1215182573199878"}, {"name": "Sotheby's | Agent 2026 Strategy Showreel (Programmatic & Social)", "section": "New request", "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1212633764223792"}], "programmatic_upcoming": [{"name": "06-16-26- Local Magazine - Full Page (Bleeds) 9.5 x 11.325- - Sotheby's - Scott Bayens -", "section": "New request", "runDate": "2026-06-16", "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215298798289351"}, {"name": "06-21-26- Aspen Daily News - 1/4 page (Vertical) - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Scott Bayens -FF", "section": "New request", "runDate": "2026-06-21", "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1207754530869361/task/1215842577226599"}, {"name": "SOTHEBYS | Lane & Scott Social", "section": "In PageProof", "runDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PW2TFH6JKLTTA8VG", "permalink": "https://app.asana.com/1/1200904395422616/project/1208980520257067/task/1215182712422778"}, {"name": "Sotheby's | Agent 2026 Strategy Showreel (Programmatic & Social)", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1212633764223792"}, {"name": "Sotheby's | Chris Klug Programmatic CTV June 2026 | 15 S Willow Court", "section": "Assigned - Not Started", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215813426868287"}, {"name": "Sotheby's | Chris Klug Programmatic CTV June 2026 | 660 Brush Creek", "section": "In PageProof", "runDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/P8NCNA09476F5XFU", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215459338671878"}, {"name": "Sotheby's | Chris Klug Programmatic Display Ads June 2026 ", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215429453908757"}, {"name": "Sotheby's | Garrett Reuss Programmatic Display Ads June 2026 ", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215625811130522"}, {"name": "Sotheby's | March 2026 Shoot - Ashley Fedderson  | Open House 1 Commercial - YouTube TV", "section": "In PageProof", "runDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PPXJS0QWNU6OV939", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114349868342"}, {"name": "Sotheby's | March 2026 Shoot - Chris Klug | Open House 1 30 Second Commercial - YouTube TV", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213824830142485"}, {"name": "Sotheby's | March 2026 Shoot - Etta & Ian McLendon | Open House 1 - YouTube TV", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213914044937929"}, {"name": "Sotheby's | March 2026 Shoot - Fran Hogan | Open House 1 Commercial - Programmatic CTV", "section": "In PageProof", "runDate": null, "proofUrl": "https://app.pageproof.com/proof-screen/PMP1S2CVAOTAEBLU", "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213864301452007"}, {"name": "Sotheby's | March 2026 Shoot - Julie Mandt | Open House 1 Commercial - Programmatic CTV", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114388184555"}, {"name": "Sotheby's | March 2026 Shoot - Lane & Scott | Open House 1 Commercial - Programmatic CTV", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114388818794"}, {"name": "Sotheby's | March 2026 Shoot - Mark & Chantal | Open House 1 Commercial - Programmatic CTV", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214114095079956"}, {"name": "Sotheby's | March 2026 Shoot - Michael Perau | Open House 1 Commercial - YouTube TV", "section": "On hold", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213865581981684"}, {"name": "Sotheby's | March 2026 Shoot - Sally Shiekman | Open House 1 Commercial - YouTube TV", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213865583296424"}, {"name": "Sotheby's | March 2026 Shoot - Soffia Wardy | Open House 1 Commercial - Programmatic CTV", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213860315029731"}, {"name": "Sotheby's | March 2026 Shoot - Terry Harrington | Open House 1 Commercial - Programmatic CTV", "section": "Assigned - Not Started", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213914045965322"}, {"name": "Sotheby's | March 2026 Shoot The Shea Team | Open House 1 30\" Commercial - YouTube TV", "section": "Assigned - Not Started", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1213825211556970"}, {"name": "Sotheby's | Sally Shiekman June 2026 Programmatic CTV | 990 E Hopkins Ave Brand Ad", "section": "Brief pending", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215814216731219"}, {"name": "Sotheby's | Scott Bayens Aspen Daily News Sticky Anchors 1140 x 90, 728 x 90, 320 x 50", "section": "In Progress", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1215841867523634"}, {"name": "Sotheby's | Summer 2026 Airport | Chris Klug | Baggage Display Frame S28", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214544377468018"}, {"name": "Sotheby's | Summer 2026 Airport | The Shea Team | S26 Baggage Display Frame", "section": "New request", "runDate": null, "proofUrl": null, "permalink": "https://app.asana.com/1/1200904395422616/project/1205367475910127/task/1214542883385146"}], "newspaper": {"company": [{"name": "05-23-26- Aspen Daily News - Full Page [Pg 2] - SC 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-05-23", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-25-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-05-25", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-26-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-05-26", "deadline": "2026-05-21", "status": "Ad Submitted"}, {"name": "05-28-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Listing", "runDate": "2026-05-28", "deadline": "2026-05-25", "status": "Ad Submitted"}, {"name": "05-29-26- Glenwood Post Independent - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "05-29-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "05-30-26- Aspen Daily News - Full Page [Pg 2] - SC 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-05-30", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "05-31-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-05-31", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-01-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - Pg 13- Listing", "runDate": "2026-06-01", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-02-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-06-02", "deadline": "2026-05-28", "status": "Ad Submitted"}, {"name": "06-05-26- Aspen Daily News - Back Page - SC 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-06-05", "deadline": "2026-06-02", "status": "Ad Submitted"}, {"name": "06-06-26- Aspen Daily News - Full Page [Pg 2] - SC 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-06-06", "deadline": "2026-06-03", "status": "Ad Submitted"}, {"name": "07-10-26- Glenwood Post Independent  - 1/2 page Horizontal - Sotheby's  10 x 6.92- 6 x 7- Sotheby's Company - - Open House", "runDate": "2026-07-10", "deadline": "2026-07-07", "status": null}, {"name": "07-10-26- Aspen Daily News - High Bright Wraps - 4 Pages P1 (10 x 12.25) & P4 (10 x 14.25), P2 (10 x 14.25) & P3 (10 x 14.25)- - Sotheby's Company - - Ad Name", "runDate": "2026-07-10", "deadline": "2026-07-07", "status": null}, {"name": "07-13-26- Aspen Daily News - High Bright Wraps - 4 Pages P1 (10 x 12.25) & P4 (10 x 14.25), P2 (10 x 14.25) & P3 (10 x 14.25)- - Sotheby's Company - - Ad Name", "runDate": "2026-07-13", "deadline": "2026-07-08", "status": null}, {"name": "07-15-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-07-15", "deadline": "2026-07-10", "status": null}, {"name": "07-17-26- Aspen Daily News - High Bright Wraps - 4 Pages P1 (10 x 12.25) & P4 (10 x 14.25), P2 (10 x 14.25) & P3 (10 x 14.25)- - Sotheby's Company - - Ad Name", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-20-26- Aspen Daily News - High Bright Wraps - 4 Pages P1 (10 x 12.25) & P4 (10 x 14.25), P2 (10 x 14.25) & P3 (10 x 14.25)- - Sotheby's Company - - Ad Name", "runDate": "2026-07-20", "deadline": "2026-07-15", "status": null}, {"name": "07-22-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-07-22", "deadline": "2026-07-17", "status": null}, {"name": "07-24-26- Glenwood Post Independent  - 1/2 page Horizontal - Sotheby's  10 x 6.92- 6 x 7- Sotheby's Company - - Open House", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Daily News - High Bright Wraps - 4 Pages P1 (10 x 12.25) & P4 (10 x 14.25), P2 (10 x 14.25) & P3 (10 x 14.25)- - Sotheby's Company - - Ad Name", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-25-26- Aspen Daily News - High Bright Wraps - 4 Pages P1 (10 x 12.25) & P4 (10 x 14.25), P2 (10 x 14.25) & P3 (10 x 14.25)- - Sotheby's Company - - Ad Name", "runDate": "2026-07-25", "deadline": "2026-07-22", "status": null}, {"name": "07-29-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-07-29", "deadline": "2026-07-24", "status": null}, {"name": "08-03-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-03", "deadline": "2026-07-29", "status": null}, {"name": "08-04-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-04", "deadline": "2026-07-30", "status": null}, {"name": "08-04-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-04", "deadline": "2026-07-30", "status": null}, {"name": "08-05-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-08-05", "deadline": "2026-07-31", "status": null}, {"name": "08-05-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-05", "deadline": "2026-07-31", "status": null}, {"name": "08-06-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-06", "deadline": "2026-08-03", "status": null}, {"name": "08-06-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-06", "deadline": "2026-08-03", "status": null}, {"name": "08-07-26- Glenwood Post Independent - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-07", "deadline": "2026-08-04", "status": null}, {"name": "08-07-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Brand Ad", "runDate": "2026-08-07", "deadline": "2026-08-04", "status": null}, {"name": "08-08-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-08", "deadline": "2026-08-05", "status": null}, {"name": "08-08-26- Aspen Daily News - Full Page [Pg 2] - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-08-08", "deadline": "2026-08-05", "status": null}, {"name": "08-09-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-09", "deadline": "2026-08-05", "status": null}, {"name": "08-10-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-10", "deadline": "2026-08-05", "status": null}, {"name": "08-11-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-11", "deadline": "2026-08-06", "status": null}, {"name": "08-11-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-11", "deadline": "2026-08-06", "status": null}, {"name": "08-12-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-12", "deadline": "2026-08-07", "status": null}, {"name": "08-12-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-08-12", "deadline": "2026-08-07", "status": null}, {"name": "08-13-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-13", "deadline": "2026-08-10", "status": null}, {"name": "08-13-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-13", "deadline": "2026-08-10", "status": null}, {"name": "08-14-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-14", "deadline": "2026-08-11", "status": null}, {"name": "08-15-26- Aspen Daily News - Full Page [Pg 2] - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-08-15", "deadline": "2026-08-12", "status": null}, {"name": "08-17-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-17", "deadline": "2026-08-12", "status": null}, {"name": "08-18-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-18", "deadline": "2026-08-13", "status": null}, {"name": "08-18-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-18", "deadline": "2026-08-13", "status": null}, {"name": "08-19-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-08-19", "deadline": "2026-08-14", "status": null}, {"name": "08-19-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-19", "deadline": "2026-08-14", "status": null}, {"name": "08-20-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-20", "deadline": "2026-08-17", "status": null}, {"name": "08-20-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-20", "deadline": "2026-08-17", "status": null}, {"name": "08-21-26- Glenwood Post Independent - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-21", "deadline": "2026-08-18", "status": null}, {"name": "08-21-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-21", "deadline": "2026-08-18", "status": null}, {"name": "08-22-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-22", "deadline": "2026-08-19", "status": null}, {"name": "08-22-26- Aspen Daily News - Full Page [Pg 2] - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-08-22", "deadline": "2026-08-19", "status": null}, {"name": "08-23-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-23", "deadline": "2026-08-19", "status": null}, {"name": "08-24-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-24", "deadline": "2026-08-19", "status": null}, {"name": "08-25-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-25", "deadline": "2026-08-20", "status": null}, {"name": "08-25-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-25", "deadline": "2026-08-20", "status": null}, {"name": "08-26-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-26", "deadline": "2026-08-21", "status": null}, {"name": "08-26-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-08-26", "deadline": "2026-08-21", "status": null}, {"name": "08-27-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-08-27", "deadline": "2026-08-24", "status": null}, {"name": "08-27-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-27", "deadline": "2026-08-24", "status": null}, {"name": "08-27-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-27", "deadline": "2026-08-24", "status": null}, {"name": "08-28-26- Aspen Daily News - Impact Ad - Sotheby's 1920 x 400, 800 x 250- - Sotheby's Company - - Ad Name", "runDate": "2026-08-28", "deadline": "2026-08-25", "status": null}, {"name": "08-28-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Open House", "runDate": "2026-08-28", "deadline": "2026-08-25", "status": null}, {"name": "08-29-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-08-29", "deadline": "2026-08-26", "status": null}, {"name": "08-29-26- Aspen Daily News - Full Page [Pg 2] - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-08-29", "deadline": "2026-08-26", "status": null}, {"name": "08-30-26- Aspen Times - Glossy Wrap - Front Cover 10 x 10.25- 6 x 10.25- Sotheby's Company - - Brand ad", "runDate": "2026-08-30", "deadline": "2026-08-26", "status": null}, {"name": "08-31-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-08-31", "deadline": "2026-08-26", "status": null}, {"name": "09-01-26- Aspen Daily News - Digital - Page 0 - Sotheby's 10 x 14, 600 x 600, 300 x 300- - Sotheby's Company - - Ad Name", "runDate": "2026-09-01", "deadline": "2026-08-27", "status": null}, {"name": "09-01-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-01", "deadline": "2026-08-27", "status": null}, {"name": "09-03-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-09-03", "deadline": "2026-08-31", "status": null}, {"name": "09-03-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-03", "deadline": "2026-08-31", "status": null}, {"name": "09-04-26- Glenwood Post Independent - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-04", "deadline": "2026-09-01", "status": null}, {"name": "09-04-26- Aspen Daily News - Impact Ad - Sotheby's 1920 x 400, 800 x 250- - Sotheby's Company - - Ad Name", "runDate": "2026-09-04", "deadline": "2026-09-01", "status": null}, {"name": "09-04-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-04", "deadline": "2026-09-01", "status": null}, {"name": "09-05-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-09-05", "deadline": "2026-09-02", "status": null}, {"name": "09-05-26- Aspen Daily News - Full Page [Pg 2] - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-09-05", "deadline": "2026-09-02", "status": null}, {"name": "09-06-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-06", "deadline": "2026-09-02", "status": null}, {"name": "09-07-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-07", "deadline": "2026-09-02", "status": null}, {"name": "09-08-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-08", "deadline": "2026-09-03", "status": null}, {"name": "09-10-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-09-10", "deadline": "2026-09-07", "status": null}, {"name": "09-10-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Brand Ad", "runDate": "2026-09-10", "deadline": "2026-09-07", "status": null}, {"name": "09-11-26- Aspen Daily News - Impact Ad - Sotheby's 1920 x 400, 800 x 250- - Sotheby's Company - - Ad Name", "runDate": "2026-09-11", "deadline": "2026-09-08", "status": null}, {"name": "09-11-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-11", "deadline": "2026-09-08", "status": null}, {"name": "09-12-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-09-12", "deadline": "2026-09-09", "status": null}, {"name": "09-12-26- Aspen Daily News - Full Page [Pg 2] - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-09-12", "deadline": "2026-09-09", "status": null}, {"name": "09-14-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-14", "deadline": "2026-09-09", "status": null}, {"name": "09-15-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-15", "deadline": "2026-09-10", "status": null}, {"name": "09-17-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-09-17", "deadline": "2026-09-14", "status": null}, {"name": "09-17-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-17", "deadline": "2026-09-14", "status": null}, {"name": "09-18-26- Glenwood Post Independent - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-18", "deadline": "2026-09-15", "status": null}, {"name": "09-18-26- Aspen Daily News - Impact Ad - Sotheby's 1920 x 400, 800 x 250- - Sotheby's Company - - Ad Name", "runDate": "2026-09-18", "deadline": "2026-09-15", "status": null}, {"name": "09-18-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-18", "deadline": "2026-09-15", "status": null}, {"name": "09-19-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-09-19", "deadline": "2026-09-16", "status": null}, {"name": "09-19-26- Aspen Daily News - Full Page [Pg 2] - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-09-19", "deadline": "2026-09-16", "status": null}, {"name": "09-20-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-20", "deadline": "2026-09-16", "status": null}, {"name": "09-21-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-21", "deadline": "2026-09-16", "status": null}, {"name": "09-22-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-22", "deadline": "2026-09-17", "status": null}, {"name": "09-24-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-09-24", "deadline": "2026-09-21", "status": null}, {"name": "09-24-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Brand Ad", "runDate": "2026-09-24", "deadline": "2026-09-21", "status": null}, {"name": "09-25-26- Aspen Daily News - Impact Ad - Sotheby's 1920 x 400, 800 x 250- - Sotheby's Company - - Ad Name", "runDate": "2026-09-25", "deadline": "2026-09-22", "status": null}, {"name": "09-25-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-25", "deadline": "2026-09-22", "status": null}, {"name": "09-26-26- Aspen Times - Sticky Anchor HPTO - Sotheby's 970 x 90 , 728 x 90, 320 x 100, 320 x 50, 640 x 200 , 640 x 100, 1456 x 180, 1940 x 180- - Sotheby's Company - - Ad Name", "runDate": "2026-09-26", "deadline": "2026-09-23", "status": null}, {"name": "09-26-26- Aspen Daily News - Full Page [Pg 2] - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Rental", "runDate": "2026-09-26", "deadline": "2026-09-23", "status": null}, {"name": "09-28-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-28", "deadline": "2026-09-23", "status": null}, {"name": "09-29-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's Company - - Listing", "runDate": "2026-09-29", "deadline": "2026-09-24", "status": null}], "agents": [{"agent": "Chris Klug", "ads": [{"name": "05-25-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Chris Klug -", "runDate": "2026-05-25", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "06-08-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Chris Klug -", "runDate": "2026-06-08", "deadline": "2026-06-03", "status": "Ad Submitted"}, {"name": "07-11-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Chris Klug -", "runDate": "2026-07-11", "deadline": "2026-07-08", "status": null}, {"name": "07-31-26- Aspen Times - Front Page Medium - Sotheby's 8.3 x 1.75- 5 x 1.75- Sotheby's - Chris Klug -", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}]}, {"agent": "Craig Morris", "ads": [{"name": "05-23-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Craig Morris -Pg 5", "runDate": "2026-05-23", "deadline": "2026-05-20", "status": "Brief pending"}, {"name": "05-26-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Craig Morris -Pg 5", "runDate": "2026-05-26", "deadline": "2026-05-21", "status": "Brief pending"}, {"name": "05-28-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Craig Morris -Pg 4", "runDate": "2026-05-28", "deadline": "2026-05-25", "status": "Ad Submitted"}, {"name": "05-30-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Craig Morris -Pg 4", "runDate": "2026-05-30", "deadline": "2026-05-27", "status": "Ad Submitted"}]}, {"agent": "Garrett Reuss", "ads": [{"name": "07-27-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Garrett Reuss -", "runDate": "2026-07-27", "deadline": "2026-07-22", "status": null}]}, {"agent": "Larry Jones", "ads": [{"name": "07-31-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Larry Jones -", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}]}, {"agent": "Laurie Laing", "ads": [{"name": "07-30-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Laurie Laing  -", "runDate": "2026-07-30", "deadline": "2026-07-27", "status": null}]}, {"agent": "Lex Tarumianz", "ads": [{"name": "05-28-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -", "runDate": "2026-05-28", "deadline": "2026-05-25", "status": "Ad Submitted"}, {"name": "06-04-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -", "runDate": "2026-06-04", "deadline": "2026-06-01", "status": "Ad Submitted"}, {"name": "06-04-26- Aspen Daily News - 1/4 page (Vertical) - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Lex Tarumianz -FF", "runDate": "2026-06-04", "deadline": "2026-06-01", "status": "Ad Submitted"}, {"name": "07-11-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-11", "deadline": "2026-07-08", "status": null}, {"name": "07-11-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-11", "deadline": "2026-07-08", "status": null}, {"name": "07-12-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-12", "deadline": "2026-07-08", "status": null}, {"name": "07-12-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-12", "deadline": "2026-07-08", "status": null}, {"name": "07-16-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -", "runDate": "2026-07-16", "deadline": "2026-07-13", "status": null}, {"name": "07-17-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-17-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-18-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-18", "deadline": "2026-07-15", "status": null}, {"name": "07-18-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-18", "deadline": "2026-07-15", "status": null}, {"name": "07-19-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-19", "deadline": "2026-07-15", "status": null}, {"name": "07-19-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-19", "deadline": "2026-07-15", "status": null}, {"name": "07-23-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -", "runDate": "2026-07-23", "deadline": "2026-07-20", "status": null}, {"name": "07-24-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-25-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-25", "deadline": "2026-07-22", "status": null}, {"name": "07-25-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-25", "deadline": "2026-07-22", "status": null}, {"name": "07-26-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-26", "deadline": "2026-07-22", "status": null}, {"name": "07-26-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-26", "deadline": "2026-07-22", "status": null}, {"name": "07-30-26- Aspen Daily News - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -", "runDate": "2026-07-30", "deadline": "2026-07-27", "status": null}, {"name": "07-31-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 9", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}, {"name": "07-31-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - Lex Tarumianz -Pg 13", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}]}, {"agent": "Other / Unattributed", "ads": [{"name": "05-23-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Four Dogs Fine Wine and Spirits -", "runDate": "2026-05-23", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-25-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Dr. Turchin -", "runDate": "2026-05-25", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-25-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-05-25", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-25-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Basalt Firearms -FF", "runDate": "2026-05-25", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-26-26- Glenwood Post Independent  - 1/4 page Vertical 4.92 x 6.92- 3 x 7- Basalt Firearms -Pg 4", "runDate": "2026-05-26", "deadline": "2026-05-21", "status": "Ad Submitted"}, {"name": "05-26-26- Glenwood Post Independent  -  1/2 Pg Horizontal - Tuesday (+Dogear) - Pg 3 10 x 6.92- 6 x 7- The Property Shop -", "runDate": "2026-05-26", "deadline": "2026-05-21", "status": "Ad Submitted"}, {"name": "05-26-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Christies -", "runDate": "2026-05-26", "deadline": "2026-05-21", "status": "Ad Submitted"}, {"name": "05-27-26- Aspen Times - 1/4 Page - Vertical  4.92 x 6.92- 3  x 7- Yuki -FF", "runDate": "2026-05-27", "deadline": "2026-05-22", "status": "Ad Submitted"}, {"name": "05-27-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Basalt Firearms -", "runDate": "2026-05-27", "deadline": "2026-05-22", "status": "Ad Submitted"}, {"name": "05-28-26- Steamboat Pilot - Front Page Large 10 x 2- - Color Auto Collision -", "runDate": "2026-05-28", "deadline": "2026-05-25", "status": "Ad Submitted"}, {"name": "05-28-26- Aspen Times - Front Page Medium 8.3 x 1.75- 5 x 1.75- Belly Up -", "runDate": "2026-05-28", "deadline": "2026-05-25", "status": "Ad Submitted"}, {"name": "05-29-26- Glenwood Post Independent  - 1/4 page Vertical 4.92 x 6.92- 3 x 7- Basalt Firearms -Pg 3", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "05-29-26- Aspen Times - Front Page Medium 8.3 x 1.75- 5 x 1.75- Grande Law -", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "05-29-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Basalt Firearms -", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "05-29-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "05-29-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Four Dogs Fine Wine and Spirits -Pg 5", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "05-30-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Grande Law -", "runDate": "2026-05-30", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "05-31-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Grande Law -", "runDate": "2026-05-31", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-01-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-06-01", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-01-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- High Tone Auto Body -", "runDate": "2026-06-01", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-01-26- Aspen Daily News - Back Page 10 x 14- 6 x 14- Christies -", "runDate": "2026-06-01", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-01-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-06-01", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-02-26- Glenwood Post Independent  -  1/2 Pg Horizontal - Tuesday (+Dogear) - Pg 3 10 x 6.92- 6 x 7- The Property Shop -", "runDate": "2026-06-02", "deadline": "2026-05-28", "status": "Ad Submitted"}, {"name": "06-02-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Belly Up -", "runDate": "2026-06-02", "deadline": "2026-05-28", "status": "Ad Submitted"}, {"name": "06-03-26- Aspen Times - 1/4 Page - Vertical  4.92 x 6.92- 3  x 7- Yuki -Pg 3", "runDate": "2026-06-03", "deadline": "2026-05-29", "status": "Ad Submitted"}, {"name": "06-04-26- Aspen Times - Front Page Medium 8.3 x 1.75- 5 x 1.75- Belly Up -", "runDate": "2026-06-04", "deadline": "2026-06-01", "status": "Ad Submitted"}, {"name": "06-05-26- Aspen Times - Front Page Medium 8.3 x 1.75- 5 x 1.75- Four Dogs Fine Wine and Spirits -", "runDate": "2026-06-05", "deadline": "2026-06-02", "status": "Ad Submitted"}, {"name": "06-05-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Christies - Colter Smith -", "runDate": "2026-06-05", "deadline": "2026-06-02", "status": "Ad Submitted"}, {"name": "06-05-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-06-05", "deadline": "2026-06-02", "status": "Ad Submitted"}, {"name": "06-05-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Four Dogs Fine Wine and Spirits -Pg 5", "runDate": "2026-06-05", "deadline": "2026-06-02", "status": "Ad Submitted"}, {"name": "06-06-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Christies -", "runDate": "2026-06-06", "deadline": "2026-06-03", "status": "Ad Submitted"}, {"name": "06-07-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Grande Law -", "runDate": "2026-06-07", "deadline": "2026-06-03", "status": "Ad Submitted"}, {"name": "06-08-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Dr. Turchin -", "runDate": "2026-06-08", "deadline": "2026-06-03", "status": "Ad Submitted"}, {"name": "06-08-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Belly Up -", "runDate": "2026-06-08", "deadline": "2026-06-03", "status": "Ad Submitted"}, {"name": "06-08-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-06-08", "deadline": "2026-06-03", "status": "Ad Submitted"}, {"name": "07-10-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-10", "deadline": "2026-07-07", "status": null}, {"name": "07-10-26- Aspen Times - Front Page Medium 8.3 x 1.75- 5 x 1.75- Four Dogs Fine Wine and Spirits -", "runDate": "2026-07-10", "deadline": "2026-07-07", "status": null}, {"name": "07-10-26- Aspen Daily News - Back Page 10 x 14- 6 x 14- Silvers Bagel Bar -", "runDate": "2026-07-10", "deadline": "2026-07-07", "status": null}, {"name": "07-10-26- Aspen Daily News - 1/8 page (Horizontal) 4.92 x 3.42- 3  x 3.5- Bangkok - Aspen -Pg 4", "runDate": "2026-07-10", "deadline": "2026-07-07", "status": null}, {"name": "07-10-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Four Dogs Fine Wine and Spirits -Pg 5", "runDate": "2026-07-10", "deadline": "2026-07-07", "status": null}, {"name": "07-11-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-11", "deadline": "2026-07-08", "status": null}, {"name": "07-12-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Grande Law -", "runDate": "2026-07-12", "deadline": "2026-07-08", "status": null}, {"name": "07-13-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Dr. Turchin -", "runDate": "2026-07-13", "deadline": "2026-07-08", "status": null}, {"name": "07-13-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Belly Up -", "runDate": "2026-07-13", "deadline": "2026-07-08", "status": null}, {"name": "07-13-26- Aspen Daily News - Back Page 10 x 14- 6 x 14- Christies -", "runDate": "2026-07-13", "deadline": "2026-07-08", "status": null}, {"name": "07-13-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-07-13", "deadline": "2026-07-08", "status": null}, {"name": "07-14-26- Glenwood Post Independent  -  1/2 Pg Horizontal - Tuesday (+Dogear) - Pg 3 10 x 6.92- 6 x 7- The Property Shop -", "runDate": "2026-07-14", "deadline": "2026-07-09", "status": null}, {"name": "07-14-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Doug Leibinger -", "runDate": "2026-07-14", "deadline": "2026-07-09", "status": null}, {"name": "07-15-26- Aspen Times - 1/4 Page - Vertical  4.92 x 6.92- 3  x 7- Yuki -Pg 3", "runDate": "2026-07-15", "deadline": "2026-07-10", "status": null}, {"name": "07-16-26- Aspen Times - Front Page Medium 8.3 x 1.75- 5 x 1.75- Belly Up -", "runDate": "2026-07-16", "deadline": "2026-07-13", "status": null}, {"name": "07-16-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Christies -", "runDate": "2026-07-16", "deadline": "2026-07-13", "status": null}, {"name": "07-16-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- State Farm -FF", "runDate": "2026-07-16", "deadline": "2026-07-13", "status": null}, {"name": "07-17-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-17-26- Aspen Daily News - Back Page 10 x 14- 6 x 14- Silvers Bagel Bar -", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-17-26- Aspen Daily News - 1/8 page (Horizontal) 4.92 x 3.42- 3  x 3.5- Bangkok - Aspen -Pg 4", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-17-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-17-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Four Dogs Fine Wine and Spirits -Pg 5", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-18-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Doug Leibinger -", "runDate": "2026-07-18", "deadline": "2026-07-15", "status": null}, {"name": "07-20-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-20", "deadline": "2026-07-15", "status": null}, {"name": "07-20-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Belly Up -", "runDate": "2026-07-20", "deadline": "2026-07-15", "status": null}, {"name": "07-20-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-07-20", "deadline": "2026-07-15", "status": null}, {"name": "07-21-26- Glenwood Post Independent  -  1/2 Pg Horizontal - Tuesday (+Dogear) - Pg 3 10 x 6.92- 6 x 7- The Property Shop -", "runDate": "2026-07-21", "deadline": "2026-07-16", "status": null}, {"name": "07-21-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Christies - Colter Smith -", "runDate": "2026-07-21", "deadline": "2026-07-16", "status": null}, {"name": "07-22-26- Aspen Times - 1/4 Page - Vertical  4.92 x 6.92- 3  x 7- Yuki -Pg 3", "runDate": "2026-07-22", "deadline": "2026-07-17", "status": null}, {"name": "07-23-26- Steamboat Pilot - Front Page 10 x 2- 6 x 2- Color Auto Collision -", "runDate": "2026-07-23", "deadline": "2026-07-20", "status": null}, {"name": "07-23-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Belly Up -", "runDate": "2026-07-23", "deadline": "2026-07-20", "status": null}, {"name": "07-24-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Times - Front Page Medium 8.3 x 1.75- 5 x 1.75- Belly Up -", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Times - 1/4 Page - Vertical  4.92 x 6.92- 3  x 7- State Farm -", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Belly Up -", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Daily News - Back Page 10 x 14- 6 x 14- Silvers Bagel Bar -", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Daily News - 1/8 page (Horizontal) 4.92 x 3.42- 3  x 3.5- Bangkok - Aspen -Pg 4", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-24-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Four Dogs Fine Wine and Spirits -Pg 5", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-25-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-25", "deadline": "2026-07-22", "status": null}, {"name": "07-25-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Four Dogs Fine Wine and Spirits -", "runDate": "2026-07-25", "deadline": "2026-07-22", "status": null}, {"name": "07-27-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-27", "deadline": "2026-07-22", "status": null}, {"name": "07-27-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Dr. Turchin -", "runDate": "2026-07-27", "deadline": "2026-07-22", "status": null}, {"name": "07-27-26- Aspen Daily News - Back Page 10 x 14- 6 x 14- Christies -", "runDate": "2026-07-27", "deadline": "2026-07-22", "status": null}, {"name": "07-27-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-07-27", "deadline": "2026-07-22", "status": null}, {"name": "07-28-26- Glenwood Post Independent  -  1/2 Pg Horizontal - Tuesday (+Dogear) - Pg 3 10 x 6.92- 6 x 7- The Property Shop -", "runDate": "2026-07-28", "deadline": "2026-07-23", "status": null}, {"name": "07-28-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-28", "deadline": "2026-07-23", "status": null}, {"name": "07-28-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Christies -", "runDate": "2026-07-28", "deadline": "2026-07-23", "status": null}, {"name": "07-29-26- Aspen Times - 1/4 Page - Vertical  4.92 x 6.92- 3  x 7- Yuki -Pg 3", "runDate": "2026-07-29", "deadline": "2026-07-24", "status": null}, {"name": "07-30-26- Aspen Times - Front Page Medium 8.3 x 1.75- 5 x 1.75- Belly Up -", "runDate": "2026-07-30", "deadline": "2026-07-27", "status": null}, {"name": "07-31-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}, {"name": "07-31-26- Aspen Daily News - Back Page 10 x 14- 6 x 14- Silvers Bagel Bar -", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}, {"name": "07-31-26- Aspen Daily News - 1/8 page (Horizontal) 4.92 x 3.42- 3  x 3.5- Bangkok - Aspen -Pg 4", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}, {"name": "07-31-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Yuki -Pg 5", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}, {"name": "07-31-26- Aspen Daily News - 1/4 page (Vertical) 4.92 x 6.92- 3 x 7- Four Dogs Fine Wine and Spirits -Pg 5", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}, {"name": "08-01-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-01", "deadline": "2026-07-29", "status": null}, {"name": "08-03-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-03", "deadline": "2026-07-29", "status": null}, {"name": "08-07-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-07", "deadline": "2026-08-04", "status": null}, {"name": "08-08-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-08", "deadline": "2026-08-05", "status": null}, {"name": "08-10-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Doug Leibinger -", "runDate": "2026-08-10", "deadline": "2026-08-05", "status": null}, {"name": "08-14-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-14", "deadline": "2026-08-11", "status": null}, {"name": "08-15-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-15", "deadline": "2026-08-12", "status": null}, {"name": "08-17-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-17", "deadline": "2026-08-12", "status": null}, {"name": "08-21-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-21", "deadline": "2026-08-18", "status": null}, {"name": "08-22-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-22", "deadline": "2026-08-19", "status": null}, {"name": "08-24-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Doug Leibinger -", "runDate": "2026-08-24", "deadline": "2026-08-19", "status": null}, {"name": "08-31-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-08-31", "deadline": "2026-08-26", "status": null}, {"name": "09-04-26- Aspen Times - Glossy Wrap - Strip 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-09-04", "deadline": "2026-09-01", "status": null}, {"name": "09-05-26- Aspen Daily News - Front Page 10 x 2- 6 x 2- Doug Leibinger -", "runDate": "2026-09-05", "deadline": "2026-09-02", "status": null}, {"name": "09-14-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-09-14", "deadline": "2026-09-09", "status": null}, {"name": "09-28-26- Aspen Times - Front Page Large 10 x 1.75- 6 x 1.75- Doug Leibinger -", "runDate": "2026-09-28", "deadline": "2026-09-23", "status": null}]}, {"agent": "Penney Carruth", "ads": [{"name": "05-29-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Penney Carruth -Pg 3", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "06-05-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Penney Carruth -Pg 3", "runDate": "2026-06-05", "deadline": "2026-06-02", "status": "Ad Submitted"}, {"name": "07-17-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Penney Carruth -Pg 3", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-24-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Penney Carruth -Pg 3", "runDate": "2026-07-24", "deadline": "2026-07-21", "status": null}, {"name": "07-31-26- Aspen Times - 1/4 Page Horizontal - Sotheby's 10 x 3.42- 6  x 3.5- Sotheby's - Penney Carruth -Pg 3", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}]}, {"agent": "Sally Shiekman", "ads": [{"name": "05-25-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "runDate": "2026-05-25", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-25-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Sally Shiekman -", "runDate": "2026-05-25", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-29-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "runDate": "2026-05-29", "deadline": "2026-05-26", "status": "Ad Submitted"}, {"name": "06-01-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "runDate": "2026-06-01", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-05-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "runDate": "2026-06-05", "deadline": "2026-06-02", "status": "Ad Submitted"}, {"name": "07-13-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "runDate": "2026-07-13", "deadline": "2026-07-08", "status": null}, {"name": "07-17-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-19-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Sally Shiekman -", "runDate": "2026-07-19", "deadline": "2026-07-15", "status": null}, {"name": "07-27-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "runDate": "2026-07-27", "deadline": "2026-07-22", "status": null}, {"name": "07-31-26- Aspen Times - 1/2 page Vertical - Sotheby's 6.61 x 10.42- 4 x 10.5 - Sotheby's - Sally Shiekman -Pg 4", "runDate": "2026-07-31", "deadline": "2026-07-28", "status": null}]}, {"agent": "Samantha Benomar", "ads": [{"name": "05-24-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Samantha Benomar -", "runDate": "2026-05-24", "deadline": "2026-05-20", "status": "Ad Submitted"}]}, {"agent": "Scott Bayens", "ads": [{"name": "05-31-26- Aspen Daily News - 1/4 page (Vertical) - Sotheby's 4.92 x 6.92- 3 x 7- Sotheby's - Scott Bayens -FF", "runDate": "2026-05-31", "deadline": "2026-05-27", "status": "Ad Submitted"}]}, {"agent": "Soffia Wardy", "ads": [{"name": "05-28-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Soffia Wardy -", "runDate": "2026-05-28", "deadline": "2026-05-25", "status": "Ad Submitted"}, {"name": "06-04-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Soffia Wardy -", "runDate": "2026-06-04", "deadline": "2026-06-01", "status": "Ad Submitted"}, {"name": "07-17-26- Aspen Times - Front Page Medium - Sotheby's 8.3 x 1.75- 5 x 1.75- Sotheby's - Soffia Wardy -", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-23-26- Aspen Times - Front Page Medium - Sotheby's 8.3 x 1.75- 5 x 1.75- Sotheby's - Soffia Wardy -", "runDate": "2026-07-23", "deadline": "2026-07-20", "status": null}]}, {"agent": "TBE Real Estate", "ads": [{"name": "05-24-26- Aspen Times - Front Page Large - Sotheby's 10 x 1.75- 6 x 1.75- Sotheby's - TBE Real Estate -", "runDate": "2026-05-24", "deadline": "2026-05-20", "status": "Ad Submitted"}, {"name": "05-27-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - TBE Real Estate -", "runDate": "2026-05-27", "deadline": "2026-05-22", "status": "Ad Submitted"}, {"name": "05-31-26- Aspen Times - Front Page Large - Sotheby's 10 x 1.75- 6 x 1.75- Sotheby's - TBE Real Estate -", "runDate": "2026-05-31", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-01-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - TBE Real Estate -", "runDate": "2026-06-01", "deadline": "2026-05-27", "status": "Ad Submitted"}, {"name": "06-03-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - TBE Real Estate -", "runDate": "2026-06-03", "deadline": "2026-05-29", "status": "Ad Submitted"}, {"name": "06-07-26- Aspen Times - Front Page Large - Sotheby's 10 x 1.75- 6 x 1.75- Sotheby's - TBE Real Estate -", "runDate": "2026-06-07", "deadline": "2026-06-03", "status": "Ad Submitted"}, {"name": "07-12-26- Aspen Times - Front Page Large - Sotheby's 10 x 1.75- 6 x 1.75- Sotheby's - TBE Real Estate -", "runDate": "2026-07-12", "deadline": "2026-07-08", "status": null}, {"name": "07-13-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - TBE Real Estate -", "runDate": "2026-07-13", "deadline": "2026-07-08", "status": null}, {"name": "07-15-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - TBE Real Estate -", "runDate": "2026-07-15", "deadline": "2026-07-10", "status": null}, {"name": "07-19-26- Aspen Times - Front Page Large - Sotheby's 10 x 1.75- 6 x 1.75- Sotheby's - TBE Real Estate -", "runDate": "2026-07-19", "deadline": "2026-07-15", "status": null}, {"name": "07-22-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - TBE Real Estate -", "runDate": "2026-07-22", "deadline": "2026-07-17", "status": null}, {"name": "07-26-26- Aspen Times - Front Page Large - Sotheby's 10 x 1.75- 6 x 1.75- Sotheby's - TBE Real Estate -", "runDate": "2026-07-26", "deadline": "2026-07-22", "status": null}, {"name": "07-27-26- Aspen Times - Back Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - TBE Real Estate -", "runDate": "2026-07-27", "deadline": "2026-07-22", "status": null}, {"name": "07-29-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - TBE Real Estate -", "runDate": "2026-07-29", "deadline": "2026-07-24", "status": null}]}, {"agent": "Terry Harrington", "ads": [{"name": "07-26-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - Terry Harrington -", "runDate": "2026-07-26", "deadline": "2026-07-22", "status": null}]}, {"agent": "The Shea Team", "ads": [{"name": "07-11-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - The Shea Team -Pg 13", "runDate": "2026-07-11", "deadline": "2026-07-08", "status": null}, {"name": "07-17-26- Aspen Daily News - Front Page - Sotheby's 10 x 2- 6 x 2- Sotheby's - The Shea Team -", "runDate": "2026-07-17", "deadline": "2026-07-14", "status": null}, {"name": "07-18-26- Aspen Daily News - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - The Shea Team -FF", "runDate": "2026-07-18", "deadline": "2026-07-15", "status": null}, {"name": "07-25-26- Aspen Times - Full Page - Sotheby's 10 x 14- 6 x 14- Sotheby's - The Shea Team -Pg 13", "runDate": "2026-07-25", "deadline": "2026-07-22", "status": null}]}]}, "budget": {"channels": [{"group": "Targeted Digital", "budget": 31095}, {"group": "Comcast (Sports + News)", "budget": 17500}, {"group": "Video & TV", "budget": 30000}, {"group": "Newsprint", "budget": 167930}, {"group": "Newsprint Digital", "budget": 80021}, {"group": "Magazine", "budget": 36395}, {"group": "Design & Management", "budget": 216000}], "total": 578941, "monthly": {"Jan": 69208, "Feb": 61463, "Mar": 61135, "Apr": 50745, "May": 46532, "Jun": 63796, "Jul": 29073, "Aug": 28836, "Sep": 25542, "Oct": 25423, "Nov": 31836, "Dec": 43854}, "newsprint_actual": [{"month": "Jan", "budget": 36159, "actual": 38573}, {"month": "Feb", "budget": 32746, "actual": 33058}, {"month": "Mar", "budget": 32300, "actual": 31708}, {"month": "Apr", "budget": 23478, "actual": 26892}]}};
+
+/* ---------- helpers ---------- */
+var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fdate(s){ if(!s) return '<span class="muted">—</span>'; var d=new Date(s+'T00:00:00');
+  if(isNaN(d)) return s; return MON[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear(); }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+function pp(u){ return u? '<a class="pp" target="_blank" rel="noopener" href="'+esc(u)+'">View proof ↗</a>' : '<span class="muted">—</span>'; }
+function dl(s){ if(!s) return '<span class="muted">—</span>';
+  var d=new Date(s+'T00:00:00'), today=new Date(DATA.generated+'T00:00:00');
+  var days=Math.round((d-today)/86400000); var cls= days<0?'due':(days<=3?'due':(days<=7?'warn':'good'));
+  var lab= days<0? Math.abs(days)+'d overdue' : (days===0?'today':days+'d');
+  return fdate(s)+' <span class="pill '+cls+'">'+lab+'</span>'; }
+function $(id){return document.getElementById(id);}
+
+function tbl(rows, opts){
+  opts=opts||{};
+  if(!rows||!rows.length) return '<div class="empty">No items currently.</div>';
+  var cols = opts.cols;
+  var h='<table><thead><tr>'+cols.map(function(c){return '<th>'+c.h+'</th>';}).join('')+'</tr></thead><tbody>';
+  rows.forEach(function(r){ h+='<tr>'+cols.map(function(c){return '<td>'+c.f(r)+'</td>';}).join('')+'</tr>'; });
+  return h+'</tbody></table>';
+}
+var C_NAME={h:'Ad name',f:function(r){var t=r.corp?('<span class="tag '+(/Company/i.test(r.corp)?'co':'ag')+'">'+esc(r.corp)+'</span> '):''; return '<span class="name">'+(r.permalink?'<a target="_blank" href="'+esc(r.permalink)+'">':'')+esc(r.name)+(r.permalink?'</a>':'')+'</span> '+t;}};
+var C_NAME_PLAIN={h:'Ad name',f:function(r){return '<span class="name">'+(r.permalink?'<a target="_blank" href="'+esc(r.permalink)+'">':'')+esc(r.name)+(r.permalink?'</a>':'')+'</span>';}};
+var C_PUB ={h:'Publish date',f:function(r){return fdate(r.publishDate);}};
+var C_PP  ={h:'PageProof',f:function(r){return pp(r.proofUrl);}};
+var C_DL  ={h:'PageProof deadline',f:function(r){return dl(r.proofDeadline);}};
+var C_NPDL={h:'PageProof deadline',f:function(r){return r.deadline?dl(r.deadline):'<span class="muted">—</span>';}};
+
+function cardTbl(title,count,rows,cols,note){
+  return '<div class="card"><div class="hd"><div class="t">'+title+'<span class="badge">'+count+'</span></div>'+
+    (note?'<div class="meta muted" style="font-size:12px">'+note+'</div>':'')+'</div>'+tbl(rows,{cols:cols})+'</div>';
+}
+function emptyManual(title,cols,what){
+  return '<div class="card"><div class="hd"><div class="t">'+title+'</div></div>'+
+   '<table><thead><tr>'+cols.map(function(c){return '<th>'+c+'</th>';}).join('')+'</tr></thead><tbody></tbody></table>'+
+   '<div class="empty"><b>Awaiting entry in the central sheet.</b> '+what+'</div></div>';
+}
+
+/* ---------- SUMMARY ---------- */
+function renderSummary(){
+  var k=DATA.kpi, h='';
+  h+='<div class="kpis">'+
+    kpi(k.in_pageproof,'In PageProof')+kpi(k.due_30,'Due ≤ 30 days')+kpi(k.published_30,'Published (30d)')+
+    kpi(k.newspaper_company,'Company newspaper')+kpi('$'+(k.budget_total/1000).toFixed(0)+'k','2026 budget',true)+'</div>';
+  h+='<h2 class="sec">In production — highlights</h2><p class="sec-note">Sotheby\'s Company work on the design board. Agent work lives on the Agents tab. PageProof link reflects the latest proof posted in the Asana task.</p>';
+  h+=cardTbl('In PageProof for review',DATA.home.in_pageproof.length,DATA.home.in_pageproof,[C_NAME_PLAIN,C_PUB,C_PP,C_DL]);
+  h+=cardTbl('Due in the next 30 days',DATA.home.due_30.length,DATA.home.due_30,[C_NAME_PLAIN,C_PUB,C_PP,C_DL],'By PageProof deadline');
+  h+=cardTbl('Published',DATA.home.published.length,DATA.home.published,[C_NAME_PLAIN,C_PUB,C_PP,C_DL],'Closed in Asana, ran within 30 days');
+
+  var npco=DATA.newspaper.company.filter(function(a){return a.runDate>=DATA.generated;})
+            .sort(function(a,b){return (a.deadline||'').localeCompare(b.deadline||'');});
+  h+='<h2 class="sec">Newspaper — Sotheby\'s Company</h2><p class="sec-note">Company newspaper ads from Airtable. Deadline = PageProof approval, 3 working days before the run date.</p>';
+  h+=cardTbl('Upcoming Company newspaper ads',npco.length,npco.slice(0,20),[
+    {h:'Ad',f:function(r){return '<span class="name">'+esc(r.name)+'</span>';}},
+    C_NPDL,
+    {h:'Status',f:function(r){return '<span class="muted">'+esc(r.status||'—')+'</span>';}}],
+    npco.length>20?('Showing soonest 20 of '+npco.length+' — full schedule on the Calendar tab'):null);
+
+  h+='<h2 class="sec">Campaigns</h2><p class="sec-note">In-flight work tagged by campaign keyword in the Asana task name.</p><div class="campgrid">';
+  var order=["Airport","Video","Open House","Brochure","Static","Magazine","ALI"];
+  order.forEach(function(c){ var items=DATA.campaigns[c]||[]; if(!items.length) return;
+    h+='<div class="campcard"><div class="ch"><span>'+c+'</span><span class="badge" style="background:var(--soft);color:var(--navy);border-radius:20px;padding:1px 9px;font-size:12px">'+items.length+'</span></div><ul>';
+    items.slice(0,8).forEach(function(t){ h+='<li>'+(t.permalink?'<a target="_blank" href="'+esc(t.permalink)+'">':'')+esc(t.name)+(t.permalink?'</a>':'')+'<div class="d">'+esc(t.section||'')+(t.runDate?' · runs '+fdate(t.runDate):'')+'</div></li>'; });
+    if(items.length>8) h+='<li class="muted">+'+(items.length-8)+' more…</li>';
+    h+='</ul></div>';
+  });
+  h+='</div>';
+
+  h+='<h2 class="sec">Key dates — next 90 days</h2><p class="sec-note">From the Sotheby\'s Annual Calendar board.</p><div class="card">';
+  h+='<table><thead><tr><th>Date</th><th>Event</th><th>Category</th></tr></thead><tbody>';
+  DATA.key_dates.forEach(function(d){ h+='<tr><td style="white-space:nowrap">'+fdate(d.date)+'</td><td class="name">'+esc(d.name)+'</td><td class="muted">'+esc(d.section)+'</td></tr>'; });
+  h+='</tbody></table></div>';
+
+  h+='<h2 class="sec">Listings featured — last 30 days</h2>';
+  h+=emptyManual('Addresses featured in brand content (last 30 days)',['Address','Content / placement','Date'],'Enter the property addresses featured in brand content over the trailing 30 days in the <b>Listings_Featured</b> tab.');
+  $('pg-summary').innerHTML=h;
+}
+function kpi(n,l,gold){return '<div class="kpi'+(gold?' gold':'')+'"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>';}
+
+/* ---------- CALENDAR ---------- */
+function renderCalendar(){
+  // build date -> events map
+  var ev={};
+  function add(date,cls,label){ if(!date) return; (ev[date]=ev[date]||[]).push({cls:cls,label:label}); }
+  // Asana production run dates (in-flight + recently published)
+  ['in_pageproof','due_30','published'].forEach(function(seg){
+    DATA.home[seg].forEach(function(r){ if(r.publishDate) add(r.publishDate,'prod', shortName(r.name)); });
+  });
+  // newspaper run dates (Company + agent, distinct colours)
+  DATA.newspaper.company.forEach(function(a){ add(a.runDate,'np','Co: '+shortName(a.name)); });
+  DATA.newspaper.agents.forEach(function(g){ g.ads.forEach(function(a){ add(a.runDate,'npa', g.agent+': '+shortName(a.name)); }); });
+  // key dates
+  DATA.key_dates.forEach(function(d){ add(d.date,'key', d.name); });
+
+  var months=[[2026,5],[2026,6],[2026,7],[2026,8]]; // Jun-Sep 2026
+  var h='<h2 class="sec">Account calendar</h2><p class="sec-note">Pulls from both Sotheby\'s Asana boards (design + annual calendar) and the Airtable newspaper schedule.</p>';
+  h+='<div class="calleg">'+
+    '<span><i style="background:var(--good)"></i>Production / publish</span>'+
+    '<span><i style="background:var(--navy)"></i>Newspaper — Company</span>'+
+    '<span><i style="background:var(--gold)"></i>Newspaper — Agent</span>'+
+    '<span><i style="background:var(--due)"></i>Key date / milestone</span></div>';
+  months.forEach(function(m){ h+=monthGrid(m[0],m[1],ev); });
+  $('pg-calendar').innerHTML=h;
+}
+function shortName(n){ n=String(n); // trim long newspaper strings to something legible
+  var m=n.split(' - '); if(n.length>42){ return n.slice(0,40)+'…'; } return n; }
+function monthGrid(y,mo,ev){
+  var first=new Date(y,mo,1), start=first.getDay(), days=new Date(y,mo+1,0).getDate();
+  var today=DATA.generated;
+  var h='<div class="month"><h3>'+["January","February","March","April","May","June","July","August","September","October","November","December"][mo]+' '+y+'</h3>';
+  h+='<table class="cal"><thead><tr>'+["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(function(d){return '<th>'+d+'</th>';}).join('')+'</tr></thead><tbody><tr>';
+  for(var i=0;i<start;i++) h+='<td class="empty"></td>';
+  for(var d=1;d<=days;d++){
+    var dow=(start+d-1)%7; if(dow===0 && d!==1) h+='</tr><tr>';
+    var ds=y+'-'+String(mo+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var items=ev[ds]||[]; var hasKey=items.some(function(e){return e.cls==='key';});
+    var cls='cell'+((dow===0||dow===6)?' we':'')+(hasKey?' hi':'')+(ds===today?' today':'');
+    h+='<td class="'+cls+'"><div class="dn">'+d+'</div>';
+    items.slice(0,3).forEach(function(e){ h+='<div class="evt '+e.cls+'" title="'+esc(e.label)+'">'+esc(e.label)+'</div>'; });
+    if(items.length>3) h+='<div class="more">+'+(items.length-3)+' more</div>';
+    h+='</td>';
+  }
+  var last=(start+days-1)%7; for(var j=last+1;j<7;j++) h+='<td class="empty"></td>';
+  return h+'</tr></tbody></table></div>';
+}
+
+/* ---------- SOCIAL ---------- */
+function renderSocial(){
+  var h='<h2 class="sec">Social media</h2>';
+  h+=emptyManual('Content due for client approval (Loomly)',['Post','Platform','Scheduled','Preview','Link'],'No Loomly connector is available, so pull the <b>Ready for client approval</b> posts into the <b>Loomly_Content</b> tab (link + preview).');
+  h+=emptyManual('Upcoming content calendar (Loomly)',['Date','Platform','Caption / title','Status'],'Populate scheduled posts in the <b>Loomly_Content</b> tab.');
+  h+='<h2 class="sec">Social reporting — last 30 days</h2><p class="sec-note">Meta reporting can\'t be plugged in directly here, so figures come from the central sheet. Windows set to 30 days.</p>';
+  h+='<div class="cols2">';
+  h+=emptyManual('Total reach per platform (30d vs prior 30d)',['Platform','Reach (30d)','Reach (prev)','Δ'],'Instagram · Facebook · LinkedIn — enter in <b>Social_Reporting</b>.');
+  h+=emptyManual('Total followers per platform (30d vs prior 30d)',['Platform','Followers','Prev','Δ'],'Enter in <b>Social_Reporting</b>.');
+  h+='</div>';
+  h+=emptyManual('Top 3 posts per platform (last 30 days)',['Platform','Post','Reach','Engagement','Link'],'Instagram, Facebook, LinkedIn — enter in <b>Social_Reporting</b>.');
+  h+='<h2 class="sec">Reels in production</h2><p class="sec-note">Live from Asana — every Sotheby\'s task referencing "reel".</p>';
+  h+=cardTbl('Reels in production',DATA.reels.length,DATA.reels.map(function(r){return r;}),[
+    {h:'Reel',f:function(r){return '<span class="name">'+(r.permalink?'<a target="_blank" href="'+esc(r.permalink)+'">':'')+esc(r.name)+(r.permalink?'</a>':'')+'</span>';}},
+    {h:'Stage',f:function(r){return '<span class="muted">'+esc(r.section||'')+'</span>';}},
+    {h:'PageProof',f:function(r){return pp(r.proofUrl);}}]);
+  $('pg-social').innerHTML=h;
+}
+
+/* ---------- PROGRAMMATIC ---------- */
+function renderProgrammatic(){
+  var h='<h2 class="sec">Programmatic</h2>';
+  h+=emptyManual('Content currently running',['Placement / channel','Creative','Flight start','Flight end','Notes'],'Enter live CTV / YouTube TV / display placements in the <b>Programmatic_Running</b> tab.');
+  h+='<h2 class="sec">Upcoming content in production</h2><p class="sec-note">Live from Asana — CTV, YouTube TV and programmatic display work for Company.</p>';
+  h+=cardTbl('Programmatic in production',DATA.programmatic_upcoming.length,DATA.programmatic_upcoming,[
+    {h:'Deliverable',f:function(r){return '<span class="name">'+(r.permalink?'<a target="_blank" href="'+esc(r.permalink)+'">':'')+esc(r.name)+(r.permalink?'</a>':'')+'</span>';}},
+    {h:'Stage',f:function(r){return '<span class="muted">'+esc(r.section||'')+'</span>';}},
+    C_PP]);
+  h+='<h2 class="sec">Programmatic reporting</h2><p class="sec-note">StackAdapt can\'t be plugged in directly here, so figures come from the central sheet.</p>';
+  h+='<div class="cols2">';
+  h+=emptyManual('Total impressions & watch-through rate',['Metric','This period','Prev period'],'Enter in <b>Programmatic_Reporting</b>.');
+  h+=emptyManual('Audience breakdown (summary)',['Segment','Share','Notes'],'Enter in <b>Programmatic_Reporting</b>.');
+  h+='</div>';
+  h+=emptyManual('Top 3 pieces of content',['Content','Impressions','VTR','Link'],'Enter in <b>Programmatic_Reporting</b>.');
+  $('pg-programmatic').innerHTML=h;
+}
+
+/* ---------- BUDGET ---------- */
+function renderBudget(){
+  var b=DATA.budget, max=Math.max.apply(null,b.channels.map(function(c){return c.budget;}));
+  var h='<h2 class="sec">Budget &amp; performance</h2><p class="sec-note">2026 plan from the Sotheby\'s budget sheet. Annual total <b>$'+b.total.toLocaleString()+'</b>.</p>';
+  h+='<div class="card"><div class="hd"><div class="t">Budget by channel — 2026</div></div><div style="padding:14px 18px"><div class="bars">';
+  b.channels.forEach(function(c){ var w=Math.round(c.budget/max*100);
+    h+='<div class="bar"><div class="bl">'+esc(c.group)+'</div><div class="bt"><div class="bf" style="width:'+w+'%"></div></div><div class="bv">$'+c.budget.toLocaleString()+'</div></div>'; });
+  h+='</div></div></div>';
+
+  var mm=Math.max.apply(null,Object.values(b.monthly));
+  h+='<div class="card"><div class="hd"><div class="t">Planned spend by month</div></div><div style="padding:14px 18px"><div class="spark">';
+  MON.forEach(function(m){ var v=b.monthly[m]||0; var hp=Math.round(v/mm*100);
+    h+='<div class="col"><div class="cb" style="height:'+hp+'%" title="$'+v.toLocaleString()+'"></div><div class="cl">'+m+'</div></div>'; });
+  h+='</div></div></div>';
+
+  var amax=Math.max.apply(null,b.newsprint_actual.map(function(r){return Math.max(r.budget,r.actual);}));
+  h+='<div class="card"><div class="hd"><div class="t">Newsprint — budget vs actual</div><div class="meta muted" style="font-size:12px">Only actuals available (Jan–Apr)</div></div><div style="padding:14px 18px">';
+  b.newsprint_actual.forEach(function(r){ var bw=Math.round(r.budget/amax*100), aw=Math.round(r.actual/amax*100); var over=r.actual>r.budget;
+    h+='<div class="vsrow"><div><b>'+r.month+'</b></div>'+
+      '<div class="m"><div class="mb" style="width:'+bw+'%;background:var(--navy)"></div><div style="position:absolute;right:6px;top:1px;font-size:11px;color:#fff">$'+r.budget.toLocaleString()+'</div></div>'+
+      '<div class="m"><div class="mb" style="width:'+aw+'%;background:'+(over?'var(--due)':'var(--good)')+'"></div><div style="position:absolute;right:6px;top:1px;font-size:11px;color:#fff">$'+r.actual.toLocaleString()+'</div></div></div>'; });
+  h+='<div class="legend2"><span><i style="background:var(--navy)"></i>Budgeted</span><span><i style="background:var(--good)"></i>Actual (on/under)</span><span><i style="background:var(--due)"></i>Actual (over)</span></div></div></div>';
+
+  h+='<div class="card"><div class="hd"><div class="t">Channel detail</div></div><table><thead><tr><th>Channel group</th><th>2026 budget</th><th>Share</th></tr></thead><tbody>';
+  b.channels.forEach(function(c){ h+='<tr><td class="name">'+esc(c.group)+'</td><td>$'+c.budget.toLocaleString()+'</td><td class="muted">'+(c.budget/b.total*100).toFixed(1)+'%</td></tr>'; });
+  h+='<tr><td class="name"><b>Total</b></td><td><b>$'+b.total.toLocaleString()+'</b></td><td></td></tr>';
+  h+='</tbody></table></div>';
+  $('pg-budget').innerHTML=h;
+}
+
+/* ---------- AGENTS ---------- */
+function renderAgents(){
+  var h='<h2 class="sec">Agents</h2><p class="sec-note">Sotheby\'s work where the task does not contain "Company". PageProof link reflects the latest proof in Asana.</p>';
+  h+=cardTbl('In PageProof for review',DATA.agents.in_pageproof.length,DATA.agents.in_pageproof,[C_NAME_PLAIN,C_PUB,C_PP,C_DL]);
+  h+=cardTbl('Due in the next 30 days',DATA.agents.due_30.length,DATA.agents.due_30,[C_NAME_PLAIN,C_PUB,C_PP,C_DL]);
+  h+=cardTbl('Published',DATA.agents.published.length,DATA.agents.published,[C_NAME_PLAIN,C_PUB,C_PP,C_DL]);
+  h+='<h2 class="sec">Newspaper ads by agent</h2><p class="sec-note">From Airtable Ad Master — Sotheby\'s ads without "Company", bundled alphabetically by agent. Deadline = PageProof approval, 3 working days before the run date.</p>';
+  DATA.newspaper.agents.forEach(function(g){
+    h+='<details class="agentblock"><summary>'+esc(g.agent)+'<span class="badge" style="background:var(--soft);color:var(--navy);border-radius:20px;padding:1px 9px;font-size:12px">'+g.ads.length+'</span></summary><div class="inner">';
+    h+='<table><thead><tr><th>Ad</th><th>PageProof deadline</th><th>Status</th></tr></thead><tbody>';
+    g.ads.forEach(function(a){ h+='<tr><td class="name">'+esc(a.name)+'</td><td style="white-space:nowrap">'+(a.deadline?dl(a.deadline):'<span class="muted">—</span>')+'</td><td class="muted">'+esc(a.status||'—')+'</td></tr>'; });
+    h+='</tbody></table></div></details>';
+  });
+  $('pg-agents').innerHTML=h;
+}
+
+/* ---------- nav + boot ---------- */
+var RENDER={summary:renderSummary,calendar:renderCalendar,social:renderSocial,programmatic:renderProgrammatic,budget:renderBudget,agents:renderAgents};
+var TITLES={summary:'Summary',calendar:'Calendar',social:'Social Media',programmatic:'Programmatic',budget:'Budget',agents:'Agents'};
+var done={};
+function show(pg){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('#nav a').forEach(function(a){a.classList.toggle('active',a.dataset.pg===pg);});
+  $('pg-'+pg).classList.add('active'); $('ptitle').textContent=TITLES[pg];
+  if(!done[pg]){ RENDER[pg](); done[pg]=true; }
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('#nav a').forEach(function(a){ a.addEventListener('click',function(){show(a.dataset.pg);}); });
+
+function boot(){
+  $('gen').textContent=fdate(DATA.generated);
+  // Refresh = re-fetch the published file, bypassing the cache (data is baked in,
+  // so a plain re-render would change nothing).
+  $('refresh').addEventListener('click',function(){
+    location.replace(location.pathname+'?t='+ new Date().getTime());
+  });
+  // Flag the button if the snapshot looks more than a day old.
+  var gen=new Date(DATA.generated+'T00:00:00'), age=(new Date()-gen)/86400000;
+  if(age>1.5){ $('refresh').classList.add('stale'); $('refresh').title='This snapshot is '+Math.floor(age)+' days old — fetch the latest'; }
+  renderSummary(); done.summary=true;
+}
+
+/* Optional live mode: if SHEET_ID set, this is where a gviz loader would
+   fetch each tab and replace DATA before boot(). Left as the documented
+   upgrade path; embedded snapshot renders by default. */
+boot();
 </script>
-
-<div class="topbar">
-  <div class="brand">
-    <div class="dba">Aspen Snowmass Sotheby&rsquo;s International Realty</div>
-    <div class="sub" id="dashboard-sub">Command Center</div>
-  </div>
-  <div class="meta">
-    <div id="period-label">Loading...</div>
-    <div id="last-updated">&mdash;</div>
-    <button class="refresh" onclick="location.reload()">&#10227; Refresh</button>
-    <div class="pill">Live</div>
-  </div>
-</div>
-
-<div class="hero">
-  <h1 id="hero-headline">Loading...</h1>
-  <p class="lede" id="hero-lede">Pulling live data from the Google Sheet...</p>
-</div>
-
-<div class="tabs">
-  <div class="tab active" data-tab="now">Now</div>
-  <div class="tab" data-tab="performance">Performance</div>
-  <div class="tab" data-tab="year">The Year</div>
-  <div class="tab" data-tab="cadence">Cadence</div>
-  <div class="tab" data-tab="production">Production</div>
-</div>
-
-<main>
-  <div class="panel active" id="panel-now">
-    <section>
-      <div class="section-head">
-        <h2>Headline Indicators</h2>
-        <span class="eyebrow"><span id="kpi-period">Year to Date</span></span>
-      </div>
-      <p class="intro">Four scoreboards measure the year: agent buy-in, brand consistency, quality reliability, editorial reach. Vanity metrics do not appear here.</p>
-      <div class="kpi-grid" id="kpi-grid"><div class="loading">Loading KPIs...</div></div>
-    </section>
-    <section>
-      <div class="section-head">
-        <h2>Active Workstreams</h2>
-        <span class="eyebrow">Live Status</span>
-      </div>
-      <p class="intro">Every active workstream, owner, next deliverable, and status. The single living view across all initiatives.</p>
-      <div class="workstream" id="workstream-table"><div class="loading">Loading workstreams...</div></div>
-    </section>
-    <section>
-      <div class="section-head">
-        <h2>Upcoming Decisions &amp; Touchpoints</h2>
-        <span class="eyebrow">Items Awaiting Input</span>
-      </div>
-      <p class="intro">Every decision required from Leslie or Will in the next 30 days, with owner and proposed action.</p>
-      <div class="touch-list" id="touch-list"><div class="loading">Loading touchpoints...</div></div>
-    </section>
-    <section>
-      <div class="section-head">
-        <h2>Significant Sales &mdash; Quarterly Candidates</h2>
-        <span class="eyebrow">For the Quarterly Market Report</span>
-      </div>
-      <p class="intro">Eight half-pages of the quarter&rsquo;s biggest and best closings. These are the candidate properties pulled from the Master Listing Sheet for Leslie and Will&rsquo;s selection.</p>
-      <div class="sig-grid" id="sig-grid"><div class="loading">Loading significant sales...</div></div>
-    </section>
-  </div>
-
-  <div class="panel" id="panel-performance">
-    <section>
-      <div class="section-head">
-        <h2>Budget &amp; Pacing</h2>
-        <span class="eyebrow" id="budget-eyebrow">$700K Annual &middot; FY 2026</span>
-      </div>
-      <p class="intro">Channel-by-channel spend against annual budget. Update YTD spend values in the Budget tab of the Sheet.</p>
-      <div class="spend-card" id="spend-card"><div class="loading">Loading budget...</div></div>
-    </section>
-    <section>
-      <div class="section-head">
-        <h2>Quality Reliability</h2>
-        <span class="eyebrow" id="error-summary-eyebrow">Production &amp; Approvals</span>
-      </div>
-      <p class="intro">A high-level read on what the team produced and how Sotheby&rsquo;s received it on first round. Headline numbers only.</p>
-      <div class="error-tile" id="error-summary-tile"><div class="loading">Loading production summary...</div></div>
-    </section>
-    <section>
-      <div class="section-head">
-        <h2>Editorial Reach</h2>
-        <span class="eyebrow">Video Output &amp; Agent Visibility</span>
-      </div>
-      <p class="intro">Volume of editorial output across video, set against cumulative agent feature count.</p>
-      <div class="two-col">
-        <div class="chart-card">
-          <h3>Video Output</h3>
-          <div class="sub">TV commercials and reels produced per month</div>
-          <div class="chart-box"><canvas id="videoChart"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <h3>Agent Features Over Time</h3>
-          <div class="sub">Cumulative broker placements across all channels</div>
-          <div class="chart-box"><canvas id="agentChart"></canvas></div>
-        </div>
-      </div>
-    </section>
-  </div>
-
-  <div class="panel" id="panel-year">
-    <section>
-      <div class="section-head">
-        <h2>Year at a Glance</h2>
-        <span class="eyebrow">12 Months Across Every Workstream</span>
-      </div>
-      <p class="intro">Every active workstream across the next 12 months. Solid blocks indicate active months.</p>
-      <div class="gantt" id="gantt-container"><div class="loading">Loading gantt...</div></div>
-      <div class="legend" id="gantt-legend"></div>
-    </section>
-    <section>
-      <div class="section-head">
-        <h2>Key Months in Detail</h2>
-        <span class="eyebrow">Highest-Concentration Months</span>
-      </div>
-      <p class="intro">The months that carry the heaviest concentration of new activity, surfaced as cards for quick review.</p>
-      <div class="month-grid" id="month-grid"><div class="loading">Loading monthly detail...</div></div>
-    </section>
-  </div>
-
-  <div class="panel" id="panel-cadence">
-    <section>
-      <div class="section-head">
-        <h2>Leslie Touchpoint Cadence</h2>
-        <span class="eyebrow">Every Interaction, Every Frequency</span>
-      </div>
-      <p class="intro">Every interaction Leslie should expect from WDR, with cadence, format, and detail. The relationship rhythm.</p>
-      <div class="cadence-list" id="cadence-list"><div class="loading">Loading cadence...</div></div>
-    </section>
-  </div>
-
-  <div class="panel" id="panel-production">
-    <section>
-      <div class="section-head">
-        <h2>Video Production Schedule</h2>
-        <span class="eyebrow">Olivier Monthly + Two Seasonal Shoots</span>
-      </div>
-      <p class="intro">Olivier-led 10-hour monthly production across seven active months, plus two full-crew seasonal shoots in July and December. Leslie is looped in on every shoot.</p>
-      <div id="video-schedule"><div class="loading">Loading video schedule...</div></div>
-    </section>
-    <section>
-      <div class="section-head">
-        <h2>Quarterly Market Report &mdash; 12-Week Cycle</h2>
-        <span class="eyebrow">Production Schedule for Every Quarter</span>
-      </div>
-      <p class="intro">Every Quarterly Market Report follows a 12-week cycle. Standard cycle, repeated quarterly.</p>
-      <div class="qmr-grid" id="qmr-grid"><div class="loading">Loading QMR cycle...</div></div>
-    </section>
-    <section>
-      <div class="section-head">
-        <h2>Social Media Weekly Cadence</h2>
-        <span class="eyebrow">Editorial Voice First</span>
-      </div>
-      <p class="intro">The recurring formats that build recognition. Localized Marketing Insider, Listing of the Week, Agent in Focus, Open House Tour Series, Lifestyle moment.</p>
-      <div class="social-grid" id="social-grid"><div class="loading">Loading social cadence...</div></div>
-    </section>
-  </div>
-</main>
-
-<footer>
-  <div class="footer-grid">
-    <div>
-      <h4>Live Command Center</h4>
-      <p>Data is pulled live from the master Google Sheet on every reload. Updates flow through within seconds. Maintained by <strong>Carla le Roux</strong> (Account Manager and Art Director) and reviewed by <strong>Anna Taylor</strong> (Account Director).</p>
-    </div>
-    <div>
-      <h4>Master Data</h4>
-      <p>The master spreadsheet lives in Google Drive: <em>ASSIR Command Center DATA</em>. Edit any cell, reload this page, see the change instantly.</p>
-    </div>
-    <div>
-      <h4>Account Team</h4>
-      <p><strong>Anna Taylor</strong><br><a href="mailto:anna@wdraspen.com">anna@wdraspen.com</a><br>970.236.7933</p>
-    </div>
-  </div>
-  <div class="disclaimer">
-    &copy; 2026 WDR Aspen. Prepared for Aspen Snowmass Sotheby&rsquo;s International Realty. Sotheby&rsquo;s International Realty&reg; and the Sotheby&rsquo;s International Realty logo are registered service marks used with permission. Each office is independently owned and operated.
-  </div>
-</footer>
-
-<script>
-const sheetUrl = (sheetName) =>
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}&headers=1`;
-
-async function fetchSheet(name) {
-  const res = await fetch(sheetUrl(name), { cache: "no-store" });
-  if (!res.ok) throw new Error(`Sheet "${name}" returned ${res.status}`);
-  const text = await res.text();
-  const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-  return parsed.data;
-}
-
-function fmtMoney(n) {
-  const num = parseFloat(n);
-  if (isNaN(num)) return "\u2014";
-  if (num >= 1000000) return "$" + (num / 1000000).toFixed(1) + "M";
-  if (num >= 1000) return "$" + Math.round(num / 1000) + "K";
-  return "$" + num.toLocaleString();
-}
-
-function showError(msg) {
-  document.querySelectorAll('.loading').forEach(el => {
-    el.outerHTML = `<div class="error-state">
-      <div class="title">Could not load data</div>
-      <p>${msg}</p>
-      <p style="margin-top:10px;">Common fixes:</p>
-      <ul style="margin: 8px 0 0 20px;">
-        <li>Confirm the <code>SHEET_ID</code> in this file points to the right Google Sheet.</li>
-        <li>Confirm the Sheet is shared as <strong>Anyone with the link can view</strong>.</li>
-        <li>Confirm the tab names in the Sheet match exactly: Config, KPIs, Budget, Workstreams, etc.</li>
-      </ul>
-    </div>`;
-  });
-}
-
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-});
-
-function renderConfig(rows) {
-  const cfg = {};
-  rows.forEach(r => cfg[r.key] = r.value);
-  document.getElementById('hero-headline').innerHTML = (cfg.hero_headline || '').replace(/elevation/g, '<em>elevation</em>');
-  document.getElementById('hero-lede').textContent = cfg.hero_lede || '';
-  document.getElementById('period-label').textContent = 'Period \u00B7 ' + (cfg.period_label || '\u2014');
-  document.getElementById('last-updated').textContent = 'Updated ' + (cfg.last_updated || '\u2014');
-  document.getElementById('dashboard-sub').textContent = cfg.dashboard_title || 'Command Center';
-  if (cfg.annual_budget) {
-    document.getElementById('budget-eyebrow').textContent =
-      fmtMoney(cfg.annual_budget) + ' Annual \u00B7 FY ' + (cfg.fiscal_year || '2026');
-  }
-  return cfg;
-}
-
-function renderKPIs(rows) {
-  const html = rows.map(r => `
-    <div class="kpi">
-      <div class="label">${r.label || ''}</div>
-      <div class="value">${r.value || '\u2014'}${r.unit ? `<span class="unit">${r.unit}</span>` : ''}</div>
-      <div class="delta ${r.delta_direction || 'flat'}">${r.delta_direction === 'up' ? '\u25B2' : r.delta_direction === 'down' ? '\u25BC' : '\u2022'} ${r.delta || ''}</div>
-      <div class="context">${r.context || ''}</div>
-    </div>`).join('');
-  document.getElementById('kpi-grid').innerHTML = html;
-}
-
-function renderBudget(rows, cfg) {
-  const total = rows.reduce((a, r) => a + (parseFloat(r.annual_budget) || 0), 0);
-  const spent = rows.reduce((a, r) => a + (parseFloat(r.ytd_spend) || 0), 0);
-  const pct = Math.round((spent / total) * 100) || 0;
-  const remaining = total - spent;
-  const yoy = (cfg && cfg.yoy_variance) ? cfg.yoy_variance : "âˆ’$50K";
-  const channelHtml = rows.map(r => {
-    const cPct = Math.round((parseFloat(r.ytd_spend) / parseFloat(r.annual_budget)) * 100) || 0;
-    const statusClass = (r.status || 'on').toLowerCase();
-    const statusLabel = { on: 'On Pace', watch: 'Watch', over: 'Over' }[statusClass] || statusClass;
-    return `<div class="channel-row">
-      <div class="name">${r.channel || ''}</div>
-      <div>${fmtMoney(r.annual_budget)}</div>
-      <div>${fmtMoney(r.ytd_spend)}</div>
-      <div class="bar"><div class="bar-fill ${r.accent === 'gold' ? 'gold' : ''}" style="width: ${cPct}%"></div></div>
-      <div class="status ${statusClass}">${statusLabel}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('spend-card').innerHTML = `
-    <div class="spend-summary">
-      <div>
-        <div class="label">Year to Date Spend</div>
-        <div class="progress"><div class="progress-bar" style="width: ${pct}%"></div></div>
-        <div class="progress-pacing">${pct}% Consumed \u00B7 ${100-pct}% Remaining</div>
-      </div>
-      <div>
-        <div class="label">YTD Spend</div>
-        <div class="big">${fmtMoney(spent)}</div>
-      </div>
-      <div>
-        <div class="label">Remaining</div>
-        <div class="med">${fmtMoney(remaining)}</div>
-      </div>
-      <div>
-        <div class="label">YoY Variance</div>
-        <div class="med" style="color: var(--green);">${yoy}</div>
-      </div>
-    </div>
-    <div class="channel-head">
-      <div>Channel</div><div>Annual Budget</div><div>YTD Spend</div><div>Pacing</div><div>Status</div>
-    </div>
-    ${channelHtml}`;
-}
-
-function renderWorkstreams(rows) {
-  const html = `
-    <div class="workstream-row head">
-      <div>Workstream</div><div>Next Deliverable</div><div>Owner</div><div>Due</div><div>Status</div>
-    </div>` + rows.map(r => `
-    <div class="workstream-row">
-      <div class="title">${r.title || ''}</div>
-      <div class="next">${r.next_deliverable || ''}</div>
-      <div class="owner">${r.owner || ''}</div>
-      <div class="owner">${r.due_date || ''}</div>
-      <div><span class="badge ${r.badge || 'blue'}">${r.status || ''}</span></div>
-    </div>`).join('');
-  document.getElementById('workstream-table').innerHTML = html;
-}
-
-function renderErrorSummary(rows) {
-  const data = {};
-  rows.forEach(r => { data[r.key] = r.value; });
-  const crafted = data.content_crafted || data.pieces_crafted || '\u2014';
-  const approved = data.version_average || data.first_round_approvals || data.approvals || '\u2014';
-  const period = data.period_label || '';
-  const note = data.trend_note || '';
-  if (period) document.getElementById('error-summary-eyebrow').textContent = 'Production & Approvals \u00B7 ' + period;
-  document.getElementById('error-summary-tile').innerHTML = `
-    <div class="stat">
-      <div class="label">Content Pieces Crafted</div>
-      <div class="value">${crafted}</div>
-    </div>
-    <div class="stat split">
-      <div class="label">Version Average</div>
-      <div class="value">${approved}</div>
-    </div>
-    <div class="trend">
-      <div class="label">Trend</div>
-      <div class="note">${note || 'No trend note provided.'}</div>
-    </div>`;
-}
-
-function renderVideoChart(rows) {
-  new Chart(document.getElementById('videoChart'), {
-    type: 'bar',
-    data: {
-      labels: rows.map(r => r.month),
-      datasets: [
-        { label: 'TV commercials', data: rows.map(r => parseFloat(r.tv_commercials)), backgroundColor: '#002349', borderRadius: 4 },
-        { label: 'Reels', data: rows.map(r => parseFloat(r.reels)), backgroundColor: '#C29B40', borderRadius: 4 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true, grid: { color: '#e9ebef' } }, x: { grid: { display: false } } },
-      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } }
-    }
-  });
-}
-
-function renderAgentChart(rows) {
-  new Chart(document.getElementById('agentChart'), {
-    type: 'line',
-    data: {
-      labels: rows.map(r => r.month),
-      datasets: [{
-        label: 'Agent features (cumulative)',
-        data: rows.map(r => parseFloat(r.cumulative)),
-        borderColor: '#002349', backgroundColor: 'rgba(0,35,73,0.08)',
-        borderWidth: 3, pointBackgroundColor: '#C29B40', pointBorderColor: '#002349',
-        pointBorderWidth: 2, pointRadius: 6, tension: 0.3, fill: true
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true, grid: { color: '#e9ebef' } }, x: { grid: { display: false } } },
-      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } } }
-    }
-  });
-}
-
-function renderSigSales(rows) {
-  document.getElementById('sig-grid').innerHTML = rows.map(r => `
-    <div class="sig-card">
-      <div class="img">${r.candidate_label || ''}</div>
-      <div class="meta">
-        <div class="price">${r.price || ''}</div>
-        <div class="addr">${r.location || ''}<br>${r.sold_month || ''}</div>
-        <div class="agent">${r.agent || ''}</div>
-      </div>
-    </div>`).join('');
-}
-
-function renderTouchpoints(rows) {
-  document.getElementById('touch-list').innerHTML = `
-    <div class="touch-head">
-      <div>Date</div><div>Decision or Touchpoint</div><div>Action</div><div>From</div>
-    </div>` + rows.map(r => `
-    <div class="touch-row">
-      <div class="touch-date">${r.date_label || ''}</div>
-      <div><strong>${r.title || ''}.</strong> ${r.description || ''}</div>
-      <div class="touch-action">${r.action || ''}</div>
-      <div>${r.from || ''}</div>
-    </div>`).join('');
-}
-
-function renderGantt(rows) {
-  const months = ['may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar','apr'];
-  const monthLabels = ['May 26','Jun 26','Jul 26','Aug 26','Sep 26','Oct 26','Nov 26','Dec 26','Jan 27','Feb 27','Mar 27','Apr 27'];
-  const body = rows.map(r => {
-    const cells = months.map(m => {
-      const isActive = String(r[m] || '').trim() === '1';
-      const color = `var(--c-${r.color || 'newsprint'})`;
-      return isActive
-        ? `<td class="cell active" style="background:${color};">â– </td>`
-        : `<td class="cell" style="background:#fafafa;"></td>`;
-    }).join('');
-    return `<tr><td class="ws-name">${r.workstream || ''}</td>${cells}</tr>`;
-  }).join('');
-  document.getElementById('gantt-container').innerHTML = `
-    <table class="gantt-table">
-      <thead><tr><th class="ws-col">Workstream</th>${monthLabels.map(m => `<th>${m}</th>`).join('')}</tr></thead>
-      <tbody>${body}</tbody>
-    </table>`;
-  const legendKeys = [
-    ['newsprint', 'Newsprint'], ['newspaper_digital', 'Newspaper Digital'],
-    ['targeted', 'Targeted Digital'], ['video', 'Video'], ['airport', 'Airport'],
-    ['magazine', 'Magazine'], ['qmr', 'Quarterly Market Report'], ['social', 'Social Media'],
-    ['fifty', '50th Anniversary'], ['leslie', 'Leslie Touchpoints'], ['internal', 'Internal']
-  ];
-  document.getElementById('gantt-legend').innerHTML = legendKeys.map(([k, l]) =>
-    `<div class="item"><span class="swatch" style="background: var(--c-${k});"></span> ${l}</div>`).join('');
-}
-
-function renderMonthlyDetail(rows) {
-  const months = {};
-  rows.forEach(r => {
-    if (!months[r.month]) months[r.month] = [];
-    months[r.month].push(r);
-  });
-  const html = Object.entries(months).map(([month, items]) => `
-    <div class="month-card">
-      <div class="head"><div class="name">${month}</div><div class="count">${items.length} deliverables</div></div>
-      <div class="body">
-        ${items.map(i => `
-          <div class="item">
-            <div class="tag" style="background: var(--c-${i.tag_color || 'newsprint'}); min-height: 30px;"></div>
-            <div class="content">
-              <div class="title">${i.title || ''}</div>
-              <div class="meta">${i.meta || ''}</div>
-            </div>
-          </div>`).join('')}
-      </div>
-    </div>`).join('');
-  document.getElementById('month-grid').innerHTML = html || '<div class="loading">No data</div>';
-}
-
-function renderCadence(rows) {
-  document.getElementById('cadence-list').innerHTML = `
-    <div class="cadence-head">
-      <div>Cadence</div><div>Touchpoint</div><div>Format</div><div>Detail</div>
-    </div>` + rows.map(r => {
-      const fc = (r.frequency || 'Daily').replace('-', '');
-      return `<div class="cadence-row">
-        <div><span class="freq-pill freq-${fc}">${r.frequency || ''}</span></div>
-        <div>${r.title || ''}</div>
-        <div>${r.format || ''}</div>
-        <div style="color: var(--grey-3); font-size: 12px;">${r.detail || ''}</div>
-      </div>`;
-    }).join('');
-}
-
-function renderVideoSchedule(rows) {
-  document.getElementById('video-schedule').innerHTML = rows.map(r => `
-    <div class="strip-card ${r.type || 'monthly'}">
-      <div class="month">${r.month || ''}</div>
-      <div class="desc">
-        <div class="title">${r.title || ''}</div>
-        <div class="sub">${r.desc || ''}</div>
-      </div>
-      <div class="owner">${r.owner || ''}</div>
-      <div class="status-cell"><span class="badge ${r.status || ''}">${r.status || ''}</span></div>
-    </div>`).join('');
-}
-
-function renderQMR(rows) {
-  document.getElementById('qmr-grid').innerHTML = rows.map(r => `
-    <div class="qmr-week">
-      <span class="num">${r.week || ''}</span>
-      <div class="title">${r.title || ''}</div>
-      <div class="owner">${r.owner || ''}</div>
-    </div>`).join('');
-}
-
-function renderSocial(rows) {
-  document.getElementById('social-grid').innerHTML = rows.map(r => `
-    <div class="social-day">
-      <div class="day">${r.day || ''}</div>
-      <div class="format">${r.format || ''}</div>
-      <div class="meta">${r.meta || ''}</div>
-    </div>`).join('');
-}
-
-async function loadAll() {
-  if (!SHEET_ID || SHEET_ID === "PASTE_YOUR_GOOGLE_SHEET_ID_HERE") {
-    showError("The Google Sheet ID has not been configured. Open this HTML file in a text editor, find the line that says <code>const SHEET_ID = ...</code> near the top, and paste the ID from your Google Sheet URL.");
-    return;
-  }
-  try {
-    const [config, kpis, budget, workstreams, errorSummary,
-           videoOutput, agentFeatures, sigSales, touchpoints, gantt,
-           monthlyDetail, cadence, videoSchedule, qmrCycle, socialCadence] =
-      await Promise.all([
-        fetchSheet("Config"), fetchSheet("KPIs"), fetchSheet("Budget"),
-        fetchSheet("Workstreams"), fetchSheet("Production Quality"),
-        fetchSheet("Video Output"), fetchSheet("Agent Features"), fetchSheet("Significant Sales"),
-        fetchSheet("Touchpoints"), fetchSheet("Year Gantt"), fetchSheet("Monthly Detail"),
-        fetchSheet("Leslie Cadence"), fetchSheet("Video Schedule"), fetchSheet("QMR Cycle"),
-        fetchSheet("Social Cadence")
-      ]);
-    const cfg = renderConfig(config);
-    renderKPIs(kpis);
-    renderBudget(budget, cfg);
-    renderWorkstreams(workstreams);
-    renderErrorSummary(errorSummary);
-    renderVideoChart(videoOutput);
-    renderAgentChart(agentFeatures);
-    renderSigSales(sigSales);
-    renderTouchpoints(touchpoints);
-    renderGantt(gantt);
-    renderMonthlyDetail(monthlyDetail);
-    renderCadence(cadence);
-    renderVideoSchedule(videoSchedule);
-    renderQMR(qmrCycle);
-    renderSocial(socialCadence);
-  } catch (e) {
-    console.error(e);
-    showError("Could not pull data from Google Sheets. Error: " + e.message);
-  }
-}
-
-Chart.defaults.font.family = "'Noto Sans', sans-serif";
-Chart.defaults.color = '#4a4d54';
-Chart.defaults.font.size = 11;
-
-loadAll();
-</script>
-
 </body>
 </html>
